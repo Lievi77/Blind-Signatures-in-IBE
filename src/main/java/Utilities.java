@@ -12,9 +12,6 @@ public class Utilities {
         //Every single SHA-1 output will be in Z_q (q is 161 bits)
 
         //transform the hex string to a big integer
-        if(s == null){
-            return null;
-        }
 
         String hex_hashed = hash_attribute(s);
 

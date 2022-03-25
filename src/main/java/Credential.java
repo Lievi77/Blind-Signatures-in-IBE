@@ -51,6 +51,7 @@ public class Credential {
         //Generates both normal public and blinded public key
 
         BigInteger g_1 = params.get_g_1();
+        BigInteger g_2 = params.get_g_2();
         BigInteger h_0 = params.get_h_0();
         BigInteger p = params.get_p();
 

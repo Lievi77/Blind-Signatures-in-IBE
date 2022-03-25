@@ -57,7 +57,14 @@ public class Client{
         assert alpha_three.compareTo(q) < 0 : "Value needs to be less than q";
 
         //create credential
-        credential = new Credential(sys_params,email, null, alpha_one);
+        //here in the credential, we put as x_1, x_2 the coordinates
+        //of the EC
+
+        //TODO: replace with actual EC point
+        String x = "913742ac";
+        String y = "193642bc";
+
+        credential = new Credential(sys_params,x, y, alpha_one);
         //to get h,as in the protocol , call credential.get_blinded_public_key
 
         BigInteger c_prime_zero = this.generate_c_prime_zero(alpha_two, alpha_three, a_zero);
@@ -104,8 +111,6 @@ public class Client{
         BigInteger may_be_a_zero = g_zero_pow_c_zero.multiply(pow_r_zero).mod(p);
 
         System.out.println("--> a_zero "+a_zero + " ?= " + "funky_part " + may_be_a_zero);
-
-        //assert a_zero.equals(may_be_a_zero) : "Verification of r_0 failed";
 
         return a_zero.compareTo(may_be_a_zero) == 0;
     }
