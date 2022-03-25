@@ -123,13 +123,16 @@ public class CA {
         return a_zero;
     }
 
-    public BigInteger generate_r_zero(BigInteger c_zero, BigInteger x_1_as_int) {
+    public BigInteger generate_r_zero(BigInteger c_zero, BigInteger x_1_as_int, BigInteger x_2_as_int) {
 
         BigInteger nominator = w_zero.subtract(c_zero).mod(q);
         System.out.println("Nominator in r_zero: " + nominator);
         assert nominator.compareTo(q) < 0 : "Must be less than q";
 
-        BigInteger denominator = x_0.add(x_1_as_int.multiply(y_1).mod(q)).modInverse(q);
+        BigInteger x_1_y_1 = x_1_as_int.multiply(y_1).mod(q);
+        BigInteger x_2_y_2 = x_2_as_int.multiply(y_2).mod(q);
+
+        BigInteger denominator = x_0.add(x_1_y_1).add(x_2_y_2).modInverse(q);
         System.out.println("Denominator in r_zero: " + denominator);
         assert denominator.compareTo(q) < 0 : "Must be less than q";
 

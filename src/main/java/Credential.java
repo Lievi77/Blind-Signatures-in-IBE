@@ -57,9 +57,11 @@ public class Credential {
 
 
         BigInteger g_one_pow_x_1 = g_1.modPow(x_1_as_big_int,p);
+        BigInteger g_two_pow_x_2 = g_2.modPow(x_2_as_big_int, p);
+        BigInteger base = g_one_pow_x_1.multiply(g_two_pow_x_2).mod(p);
 
         //unblinded public key
-        this.unblinded_public_key = g_one_pow_x_1.multiply(h_0).mod(p);
+        this.unblinded_public_key = base.multiply(h_0).mod(p);
         System.out.println("--> Unblinded public key, credential: " + unblinded_public_key);
 
         //blind public key
@@ -81,6 +83,8 @@ public class Credential {
     public BigInteger get_x1_big_int(){
         return x_1_as_big_int;
     }
+
+    public BigInteger get_x2_big_int() {return x_2_as_big_int; }
 
 
     public BigInteger get_unblinded_public_key(){

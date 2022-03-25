@@ -61,8 +61,8 @@ public class Client{
         //of the EC
 
         //TODO: replace with actual EC point
-        String x = "913742ac";
-        String y = "193642bc";
+        String x = "BrandonMyLove";
+        String y = "LevIsCool";
 
         credential = new Credential(sys_params,x, y, alpha_one);
         //to get h,as in the protocol , call credential.get_blinded_public_key
@@ -71,15 +71,15 @@ public class Client{
 
         assert c_prime_zero.compareTo(q) < 0 : "Value needs to be less than q";
 
-        BigInteger c_zero = (c_prime_zero.subtract(alpha_two)).mod(q);
+        BigInteger c_zero = c_prime_zero.subtract(alpha_two).mod(q);
 
-        assert c_prime_zero.compareTo(q) < 0 : "Value needs to be less than q";
+        assert c_zero.compareTo(q) < 0 : "Value needs to be less than q";
 
         System.out.println("c_prime_zero: " + c_prime_zero);
         System.out.println("c_zero: "  + c_zero);
 
         //now, send c_zero to CA
-        BigInteger r_zero = admin.generate_r_zero(c_zero, credential.get_x1_big_int());
+        BigInteger r_zero = admin.generate_r_zero(c_zero, credential.get_x1_big_int(), credential.get_x2_big_int());
 
         System.out.println("r_zero: " + r_zero);
 
@@ -128,7 +128,7 @@ public class Client{
 
         String text = h.toString() + alongside;
 
-        String  hex_hashed_big_int = Utilities.hash_attribute(text);
+        String hex_hashed_big_int = Utilities.hash_attribute(text);
 
         BigInteger hex_hashed_as_big_int = new BigInteger(hex_hashed_big_int, 16);
 
