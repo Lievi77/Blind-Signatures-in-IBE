@@ -57,22 +57,29 @@ public class Client{
         assert alpha_three.compareTo(q) < 0 : "Value needs to be less than q";
 
         //create credential
-        credential = new Credential(sys_params,email, null, alpha_one);
+        //here in the credential, we put as x_1, x_2 the coordinates
+        //of the EC
+
+        //TODO: replace with actual EC point
+        String x = "BrandonMyLove";
+        String y = "LevIsCool";
+
+        credential = new Credential(sys_params,x, y, alpha_one);
         //to get h,as in the protocol , call credential.get_blinded_public_key
 
         BigInteger c_prime_zero = this.generate_c_prime_zero(alpha_two, alpha_three, a_zero);
 
         assert c_prime_zero.compareTo(q) < 0 : "Value needs to be less than q";
 
-        BigInteger c_zero = (c_prime_zero.subtract(alpha_two)).mod(q);
+        BigInteger c_zero = c_prime_zero.subtract(alpha_two).mod(q);
 
-        assert c_prime_zero.compareTo(q) < 0 : "Value needs to be less than q";
+        assert c_zero.compareTo(q) < 0 : "Value needs to be less than q";
 
         System.out.println("c_prime_zero: " + c_prime_zero);
         System.out.println("c_zero: "  + c_zero);
 
         //now, send c_zero to CA
-        BigInteger r_zero = admin.generate_r_zero(c_zero, credential.get_x1_big_int());
+        BigInteger r_zero = admin.generate_r_zero(c_zero, credential.get_x1_big_int(), credential.get_x2_big_int());
 
         System.out.println("r_zero: " + r_zero);
 
@@ -105,8 +112,6 @@ public class Client{
 
         System.out.println("--> a_zero "+a_zero + " ?= " + "funky_part " + may_be_a_zero);
 
-        //assert a_zero.equals(may_be_a_zero) : "Verification of r_0 failed";
-
         return a_zero.compareTo(may_be_a_zero) == 0;
     }
 
@@ -123,7 +128,7 @@ public class Client{
 
         String text = h.toString() + alongside;
 
-        String  hex_hashed_big_int = Utilities.hash_attribute(text);
+        String hex_hashed_big_int = Utilities.hash_attribute(text);
 
         BigInteger hex_hashed_as_big_int = new BigInteger(hex_hashed_big_int, 16);
 
