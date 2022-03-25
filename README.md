@@ -19,6 +19,20 @@ The implementation will be done within a single project/application in Java, LTS
 ##### Client
 >A Client class used for encrypted communication between users. Once more the client is largely implemented via the Cyrptid-Java library, but several conditional additions via wrapper functions. These will largely handle communication with the CA, and passing values to the PKG. The role of the user class is mostly for testing and proving conceptual ideals, so it is relatively important in terms of use.</div>
 
+---
+
+# Installation
+
+To install this program and its dependencies. Run the following command in this folder 
+
+> mvn install
+
+Then navigate to `target/classes/` and run
+
+> java Testing
+
+to run the test program.
+
 ## **TODO**
 
 - [x] Create High-Level Design diagram
