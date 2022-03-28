@@ -1,5 +1,6 @@
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.CipherTextTuple;
+import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
 import java.util.Scanner;
@@ -60,11 +61,18 @@ public class Client{
         //here in the credential, we put as x_1, x_2 the coordinates
         //of the EC
 
-        //TODO: replace with actual EC point
-        String x = "BrandonMyLove";
-        String y = "LevIsCool";
 
-        credential = new Credential(sys_params,x, y, alpha_one);
+        System.out.println("-->Requesting EC point for " + email);
+
+        ECPoint assigned_point = admin.generate_user_point(email);
+
+        //TODO: replace with actual EC point
+        String EC_x = assigned_point.getXCoord().toString();
+        String EC_y = assigned_point.getYCoord().toString();
+        System.out.println("EC_x: " + EC_x );
+        System.out.println("EC_y: " + EC_y);
+
+        credential = new Credential(sys_params,EC_x, EC_y, alpha_one);
         //to get h,as in the protocol , call credential.get_blinded_public_key
 
         BigInteger c_prime_zero = this.generate_c_prime_zero(alpha_two, alpha_three, a_zero);
@@ -87,11 +95,13 @@ public class Client{
 
         if(isValid){
             //create r'_zero
-            System.out.println("Check passed");
+            System.out.println("Check passed, issuing signature");
 
             BigInteger numerator = r_zero.add(alpha_three).mod(q);
             BigInteger denominator = alpha_one.modInverse(q);
             BigInteger r_prime_zero = numerator.multiply(denominator).mod(q);
+            this.credential.setSignature(c_prime_zero, r_prime_zero);
+            credential.printSignature();
 
         }else{
             System.out.println("Error!!!");

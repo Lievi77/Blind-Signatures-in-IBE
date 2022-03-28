@@ -7,12 +7,7 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Random;
-import java.util.stream.Collectors;
 
 public class CA {
 
@@ -22,7 +17,7 @@ public class CA {
     private X9ECParameters x9;
     private ArrayList<ECPoint> userPoints;
 
-    private ECPoint generator;
+    private ECPoint ec_generator;
     private ArrayList<BigInteger> testing = new ArrayList<>();
 
     private final BigInteger q = new BigInteger("2060482539417004714807271807532720159194878157261");
@@ -37,7 +32,7 @@ public class CA {
         // Create P-224 type Elliptic Curve along with master secret and Q value (temp)
         x9 = NISTNamedCurves.getByName("P-224");
         masterSecret = BigInteger.ONE;
-        generator = this.x9.getG();
+        ec_generator = this.x9.getG();
         userPoints = new ArrayList<ECPoint>();
 
 
@@ -89,24 +84,22 @@ public class CA {
     }
 
     // Secondary verify function used for if point is not available
-    public boolean verify_user_point(String identity) throws NoSuchAlgorithmException {
-
-        String hexString = this.text_to_hash(identity);
-        BigInteger input = new BigInteger(hexString);
-        ECPoint toCompare = generator.multiply(input);
+    public boolean verify_user_point(String identity) {
+        BigInteger input = Utilities.str_to_big_int(identity);
+        ECPoint toCompare = ec_generator.multiply(input);
 
         return this.userPoints.contains(toCompare);
     }
 
     // Public function used to generate a point on the EC for a given identity
-    public void generate_user_point(String identity) throws NoSuchAlgorithmException {
+    public ECPoint generate_user_point(String identity){
 
         // Convert identity to hexadecimal hash and use as BigInteger to generate point
         // on curve, call method to set point in array of points
-        String hexString = this.text_to_hash(identity);
-        BigInteger input = new BigInteger(hexString, 16);
-        ECPoint point = this.generator.multiply(input);
+        BigInteger input = Utilities.str_to_big_int(identity);;
+        ECPoint point = this.ec_generator.multiply(input);
         set_user_point(point);
+        return point;
     }
 
     public BigInteger generate_a_zero() {
@@ -138,15 +131,5 @@ public class CA {
 
         // can also express a division as a multiplication
         return nominator.multiply(denominator).mod(q);
-    }
-
-    // Public function used to hash plain text into hexadecimal for conversion to
-    // BigInteger
-    public String text_to_hash(String text) throws NoSuchAlgorithmException {
-
-        // Define hash function for MessageDigest, digest text into bytearray and encode
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hash = digest.digest(text.getBytes(StandardCharsets.UTF_8));
-        return new String(Hex.encode(hash));
     }
 }
