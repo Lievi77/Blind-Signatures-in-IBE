@@ -1,5 +1,4 @@
 import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 public class Testing {
@@ -8,23 +7,45 @@ public class Testing {
     public static void main(String[] args) {
 
         Testing test = new Testing();
-       // test.test_two_attributes();
+        // test.test_two_attributes();
         test.testIssueProtocol();
-//         BigInteger G = get_generator(161);
-//         System.out.println("Generator g_0: " +G);
+        // BigInteger G = get_generator(161);
+        // System.out.println("Generator g_0: " +G);
+        test.testShowProtocol();
 
     }
 
-    private void test_two_attributes(){
+    private void testShowProtocol() {
+        Client alice = new Client("alice@test.com");
+        CA ca = new CA();
+
+        SystemParameters sys_param = ca.get_system_parameters();
+
+        alice.setSystemParameters(sys_param);
+
+        // Now Alice requests a digital credential
+        alice.requestCredential(ca);
+
+        /*
+         * after this method is executed, alice now has a valid
+         * digital credential issued by the CA.
+         * Can be accessed via alice.credential
+         */
+        // now, use showProtocol
+        alice.show();
+
+    }
+
+    private void test_two_attributes() {
         CA ca = new CA();
         SystemParameters params = ca.get_system_parameters();
 
-        //simulating alpha 1
+        // simulating alpha 1
         BigInteger alpha_one = BigInteger.valueOf(100);
 
         System.out.println("~~Testing Credential 2 attr");
         Credential credential = new Credential(params,
-                "p1", "p2", alpha_one );
+                "p1", "p2", alpha_one);
     }
 
     private void testIssueProtocol() {
@@ -55,7 +76,7 @@ public class Testing {
             p = q.multiply(BigInteger.TWO.pow(1024 - number_of_bits)); // get 1024 bit p (1024 - number_of_bits)
 
             p = p.add(BigInteger.ONE);
-           // System.out.println("Is p Prime? " + p.isProbablePrime(10));
+            // System.out.println("Is p Prime? " + p.isProbablePrime(10));
 
         } while (!p.isProbablePrime(10));
 

@@ -4,7 +4,7 @@ import java.math.BigInteger;
 
 public class Credential {
 
-    private final BigInteger alpha_one;
+    private final BigInteger alpha_one; //blinding factor
 
     static int id_count = 0;
 
@@ -14,6 +14,8 @@ public class Credential {
     private BigInteger unblinded_public_key;
 
     private BigInteger blinded_public_key;
+
+    private BigInteger show_protocol_public_key;
 
     private final SystemParameters params; //system parameters
 
@@ -55,7 +57,9 @@ public class Credential {
 
         BigInteger g_one_pow_x_1 = g_1.modPow(x_1_as_big_int,p);
         BigInteger g_two_pow_x_2 = g_2.modPow(x_2_as_big_int, p);
+        BigInteger h_0_pow_alpha = h_0.modPow(alpha_one,p);
         BigInteger base = g_one_pow_x_1.multiply(g_two_pow_x_2).mod(p);
+
 
         //unblinded public key
         this.unblinded_public_key = base.multiply(h_0).mod(p);
@@ -65,17 +69,15 @@ public class Credential {
         this.blinded_public_key =  unblinded_public_key.modPow(alpha_one,p);
         System.out.println("--> Blinded public key, credential: " + blinded_public_key);
 
+        this.show_protocol_public_key = g_one_pow_x_1.multiply(g_two_pow_x_2).multiply(h_0_pow_alpha).mod(p);
+
         //important!!
         assert  unblinded_public_key.compareTo(BigInteger.ONE) != 0;
         assert blinded_public_key.compareTo(BigInteger.ONE) != 0;
 
     }
 
-    public BigInteger get_blinded_public_key(){
-
-        System.out.println("Blinded key was used: " + this.blinded_public_key );
-        return this.blinded_public_key;
-    }
+    public BigInteger get_blinded_public_key(){ return this.blinded_public_key;}
 
     public BigInteger get_x1_big_int(){
         return x_1_as_big_int;
@@ -83,11 +85,11 @@ public class Credential {
 
     public BigInteger get_x2_big_int() {return x_2_as_big_int; }
 
+    public BigInteger get_alpha_one(){return alpha_one;}
 
-    public BigInteger get_unblinded_public_key(){
-        System.out.println("Unblinded key was used: " + this.unblinded_public_key);
-        return unblinded_public_key; }
+    public BigInteger get_unblinded_public_key(){return unblinded_public_key; }
 
+    public BigInteger get_show_protocol_public_key(){return show_protocol_public_key;}
 
     public int getId(){
         return id;

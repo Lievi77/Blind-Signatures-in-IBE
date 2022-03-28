@@ -105,7 +105,7 @@ public class CA {
     public BigInteger generate_a_zero() {
         // alongside generating this method, the CA pics also
         // picks a random value for w_zero
-        w_zero = BigInteger.valueOf(99);
+        w_zero = BigInteger.valueOf(999);
         System.out.println("w_zero:" + w_zero);
         assert w_zero.compareTo(q) < 0 : "Value must be less than q";
 
