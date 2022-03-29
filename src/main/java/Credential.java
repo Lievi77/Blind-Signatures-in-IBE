@@ -1,5 +1,3 @@
-import org.javatuples.Tuple;
-
 import java.math.BigInteger;
 
 public class Credential {
@@ -15,9 +13,9 @@ public class Credential {
 
     private BigInteger blinded_public_key;
 
-    private BigInteger show_protocol_public_key;
+    private BigInteger show_protocol_brands_public_key;
 
-    private final SystemParameters params; //system parameters
+    private final SystemParameters system_parameters; //system parameters
 
     private final String x_1; // attribute
 
@@ -32,7 +30,7 @@ public class Credential {
     private BigInteger r_prime_zero =  null;
 
     public Credential(SystemParameters params, String x_1, String x_2, BigInteger alpha_one){
-        this.params = params;
+        this.system_parameters = params;
         this.x_1 = x_1;
         x_1_as_big_int = Utilities.str_to_big_int(x_1);
 
@@ -41,18 +39,18 @@ public class Credential {
 
         this.alpha_one = alpha_one;
 
-        this.generate_public_key();
+        this.generate_public_keys();
 
         id++;
     }
 
-    private void generate_public_key(){
+    private void generate_public_keys(){
         //Generates both normal public and blinded public key
 
-        BigInteger g_1 = params.get_g_1();
-        BigInteger g_2 = params.get_g_2();
-        BigInteger h_0 = params.get_h_0();
-        BigInteger p = params.get_p();
+        BigInteger g_1 = system_parameters.get_g_1();
+        BigInteger g_2 = system_parameters.get_g_2();
+        BigInteger h_0 = system_parameters.get_h_0();
+        BigInteger p = system_parameters.get_p();
 
 
         BigInteger g_one_pow_x_1 = g_1.modPow(x_1_as_big_int,p);
@@ -69,7 +67,7 @@ public class Credential {
         this.blinded_public_key =  unblinded_public_key.modPow(alpha_one,p);
         System.out.println("--> Blinded public key, credential: " + blinded_public_key);
 
-        this.show_protocol_public_key = g_one_pow_x_1.multiply(g_two_pow_x_2).multiply(h_0_pow_alpha).mod(p);
+        this.show_protocol_brands_public_key = g_one_pow_x_1.multiply(g_two_pow_x_2).multiply(h_0_pow_alpha).mod(p);
 
         //important!!
         assert  unblinded_public_key.compareTo(BigInteger.ONE) != 0;
@@ -89,7 +87,7 @@ public class Credential {
 
     public BigInteger get_unblinded_public_key(){return unblinded_public_key; }
 
-    public BigInteger get_show_protocol_public_key(){return show_protocol_public_key;}
+    public BigInteger get_brands_show_protocol_public_key(){return show_protocol_brands_public_key;}
 
     public int getId(){
         return id;
@@ -105,7 +103,6 @@ public class Credential {
     public void printSignature(){
         System.out.println("c'0 : " +  c_prime_zero);
         System.out.println("r'0: " + r_prime_zero);
-
     }
 
 

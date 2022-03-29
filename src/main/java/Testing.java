@@ -32,20 +32,8 @@ public class Testing {
          * Can be accessed via alice.credential
          */
         // now, use showProtocol
-        alice.show();
+        alice.do_show_protocol_brands();
 
-    }
-
-    private void test_two_attributes() {
-        CA ca = new CA();
-        SystemParameters params = ca.get_system_parameters();
-
-        // simulating alpha 1
-        BigInteger alpha_one = BigInteger.valueOf(100);
-
-        System.out.println("~~Testing Credential 2 attr");
-        Credential credential = new Credential(params,
-                "p1", "p2", alpha_one);
     }
 
     private void testIssueProtocol() {
