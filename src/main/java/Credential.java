@@ -4,20 +4,18 @@ import java.math.BigInteger;
 
 public class Credential {
 
-    private final BigInteger alpha_one;
+    private final BigInteger alpha_one; //blinding factor
 
     static int id_count = 0;
 
     private int id;
-
-    private Tuple ellipticPoint;
 
     //regular public key is not pow alpha_one
     private BigInteger unblinded_public_key;
 
     private BigInteger blinded_public_key;
 
-    private String signature;
+    private BigInteger show_protocol_public_key;
 
     private final SystemParameters params; //system parameters
 
@@ -25,9 +23,13 @@ public class Credential {
 
     private final BigInteger x_1_as_big_int;
 
-    private final String x_2;
+    private final String x_2; //attribute 2
 
     private final BigInteger x_2_as_big_int;
+
+    //Credential Signature issued by CA
+    private BigInteger c_prime_zero = null; //non-null only after issue protocol is run
+    private BigInteger r_prime_zero =  null;
 
     public Credential(SystemParameters params, String x_1, String x_2, BigInteger alpha_one){
         this.params = params;
@@ -36,9 +38,6 @@ public class Credential {
 
         this.x_2 = x_2;
         x_2_as_big_int = Utilities.str_to_big_int(x_2);
-
-        //sanity check
-        assert x_1_as_big_int.compareTo(params.get_q()) < 0 :"Must be less than q";
 
         this.alpha_one = alpha_one;
 
@@ -58,7 +57,9 @@ public class Credential {
 
         BigInteger g_one_pow_x_1 = g_1.modPow(x_1_as_big_int,p);
         BigInteger g_two_pow_x_2 = g_2.modPow(x_2_as_big_int, p);
+        BigInteger h_0_pow_alpha = h_0.modPow(alpha_one,p);
         BigInteger base = g_one_pow_x_1.multiply(g_two_pow_x_2).mod(p);
+
 
         //unblinded public key
         this.unblinded_public_key = base.multiply(h_0).mod(p);
@@ -68,17 +69,15 @@ public class Credential {
         this.blinded_public_key =  unblinded_public_key.modPow(alpha_one,p);
         System.out.println("--> Blinded public key, credential: " + blinded_public_key);
 
+        this.show_protocol_public_key = g_one_pow_x_1.multiply(g_two_pow_x_2).multiply(h_0_pow_alpha).mod(p);
+
         //important!!
         assert  unblinded_public_key.compareTo(BigInteger.ONE) != 0;
         assert blinded_public_key.compareTo(BigInteger.ONE) != 0;
 
     }
 
-    public BigInteger get_blinded_public_key(){
-
-        System.out.println("Blinded key was used: " + this.blinded_public_key );
-        return this.blinded_public_key;
-    }
+    public BigInteger get_blinded_public_key(){ return this.blinded_public_key;}
 
     public BigInteger get_x1_big_int(){
         return x_1_as_big_int;
@@ -86,14 +85,27 @@ public class Credential {
 
     public BigInteger get_x2_big_int() {return x_2_as_big_int; }
 
+    public BigInteger get_alpha_one(){return alpha_one;}
 
-    public BigInteger get_unblinded_public_key(){
-        System.out.println("Unblinded key was used: " + this.unblinded_public_key);
-        return unblinded_public_key; }
+    public BigInteger get_unblinded_public_key(){return unblinded_public_key; }
 
+    public BigInteger get_show_protocol_public_key(){return show_protocol_public_key;}
 
     public int getId(){
         return id;
+    }
+
+    public void setSignature(BigInteger c_prime_zero, BigInteger r_prime_zero){
+        this.c_prime_zero = c_prime_zero;
+        this.r_prime_zero = r_prime_zero;
+    }
+
+
+
+    public void printSignature(){
+        System.out.println("c'0 : " +  c_prime_zero);
+        System.out.println("r'0: " + r_prime_zero);
+
     }
 
 
