@@ -105,6 +105,4 @@ public class Credential {
         System.out.println("r'0: " + r_prime_zero);
     }
 
-
-
 }

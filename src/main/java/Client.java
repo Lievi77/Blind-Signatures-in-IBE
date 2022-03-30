@@ -11,6 +11,12 @@ public class Client {
     private final String email;
     private Credential credential;
     private SystemParameters sys_params;
+    private ECPoint user_ec_point;
+    private ECPoint P_prime;
+    private BigInteger r;
+    private BigInteger r_x; // used to blind and unblind C_x
+    private BigInteger r_y; // used to blind and unblind C_y
+    private BigInteger alpha; //blinding factor
 
     public Client(String email) {
         this.email = email;
@@ -33,6 +39,8 @@ public class Client {
     // this method sets a new credential for the client
     public void requestCredential(CA admin) {
 
+        this.sys_params = admin.get_system_parameters();
+
         BigInteger q = sys_params.get_q();
 
         // following the diagram
@@ -44,6 +52,7 @@ public class Client {
         // hardcoded "random"
         // Example of programming with assertion
         alpha_one = BigInteger.valueOf(89); // blinding factor
+        this.alpha= alpha_one;
         System.out.println("Alpha_1 (blinding factor) : " + alpha_one);
         assert alpha_one.compareTo(q) < 0 : "Value needs to be less than q";
         assert alpha_one.gcd(q).equals(BigInteger.ONE);
@@ -63,6 +72,9 @@ public class Client {
         System.out.println("-->Requesting EC point for " + email);
 
         ECPoint assigned_point = admin.generate_user_point(email);
+        this.user_ec_point = assigned_point;
+        r = BigInteger.valueOf(90);
+        P_prime = user_ec_point.multiply(r);
 
         String EC_x = assigned_point.getXCoord().toString();
         String EC_y = assigned_point.getYCoord().toString();
@@ -226,6 +238,75 @@ public class Client {
 
         System.out.println("Check passed: " + left_side.equals(right_side));
 
+    }
+
+    public CipherTextTuple sendMessage(String receiver_public_key, IdentityBasedEncryption ibe){
+
+        String message = "Pochita";
+        CipherTextTuple cipherText = ibe.encrypt(message,receiver_public_key);
+
+        return cipherText;
+    }
+
+    //must be run after requestCredential
+    public BigInteger blindCredentialX(){
+        //Double check with adams
+        // random r_x in Z_q
+        BigInteger q = sys_params.get_q();
+        
+        BigInteger x = user_ec_point.getXCoord().toBigInteger().mod(q);
+        BigInteger x_prime = P_prime.getXCoord().toBigInteger().mod(q);
+        
+        //mult inverse of x
+        BigInteger x_inv = x.modInverse(q);
+
+        r_x = x_prime.multiply(x_inv).mod(q); //may cause a bug
+        assert (r_x.multiply(x).mod(q)).equals(x_prime) : "must be equal";
+
+        //C_x = C^(r_x) = g1^x' . g2^(r_x)y . h0^(r_x)alpha
+
+        BigInteger g_1 = sys_params.get_g_1();
+        BigInteger g_2 = sys_params.get_g_2();
+        BigInteger h_0 = sys_params.get_h_0();
+        BigInteger p = sys_params.get_p();
+        BigInteger y = user_ec_point.getYCoord().toBigInteger();
+
+        BigInteger g_1_pow_x_prime = g_1.modPow(x_prime,p);
+        BigInteger g_2_pow_r_x_y = g_2.modPow(r_x.multiply(y), p );
+        BigInteger h_0_pow_r_x_alpha = h_0.modPow(r_x.multiply(alpha),p);
+
+        BigInteger C_x = g_1_pow_x_prime.multiply(g_2_pow_r_x_y).multiply(h_0_pow_r_x_alpha).mod(q);
+
+        return C_x;
+    }
+
+    //must be run after requestCredential
+    public BigInteger blindCredentialY(){
+        //Double check with adams
+        // random r_x in Z_q
+        BigInteger q = sys_params.get_q();
+        BigInteger p = sys_params.get_p();
+
+        BigInteger x = user_ec_point.getXCoord().toBigInteger();
+        BigInteger y = user_ec_point.getYCoord().toBigInteger().mod(q);
+        BigInteger y_prime = P_prime.getYCoord().toBigInteger().mod(q);
+
+        //mult inverse of x
+        BigInteger y_inv = y.modInverse(q);
+
+        r_y = y_prime.multiply(y_inv).mod(q); //may cause a bug
+        assert (r_y.multiply(y).mod(q)).equals(y_prime) : "must be equal";
+
+        BigInteger g_1 = sys_params.get_g_1();
+        BigInteger g_2 = sys_params.get_g_2();
+        BigInteger h_0 = sys_params.get_h_0();
+        //C_y = C^(r_y) = g1^(r_y)x . g2^y' . h0^(r_y)alpha.
+        BigInteger g1_pow_r_y_x = g_1.modPow(r_y.multiply(x),p);
+        BigInteger g2_pow_y_prime = g_2.modPow(y_prime,p);
+        BigInteger h0_pow_r_y = h_0.modPow(r_y.multiply(alpha),p);
+        BigInteger C_y = (g1_pow_r_y_x.multiply(g2_pow_y_prime).multiply(h0_pow_r_y)).mod(q);
+
+        return C_y;
     }
 
 }

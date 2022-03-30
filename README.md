@@ -75,3 +75,7 @@ For the sake of testing, the initial iteration of the issue protocol will have t
 The issue protocol will be in accordance to Brand's paper.
 
 ![brands_issue](readme-images/brands_issue.png)
+
+### Blinding the Credential
+
+> Alice multiplies P by a random integer r to give a new point P' = rP = (x', y').  Alice can find r_x and r_y such that x' = (r_x)x.  Similarly, she can find r_y such that y' = (r_y)y.  Therefore, Alice can take her credential C = g1^x . g2^y . h0^alpha and blind it to C_x = C^(r_x) = g1^x' . g2^(r_x)y . h0^(r_x)alpha.  Similarly, she can blind C to C_y = C^(r_y) = g1^(r_y)x . g2^y' . h0^(r_y)alpha.  (As I mentioned, she needs to create both these blinded credentials because there is not a single value that she can raise C to that will correctly modify both x and y.)
