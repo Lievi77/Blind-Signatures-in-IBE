@@ -4,9 +4,11 @@ import java.math.BigInteger;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 public class Utilities {
     //class of static method
+    public static SecureRandom secureRandom = new SecureRandom();
 
     public static BigInteger str_to_big_int(String s){
         //Every single SHA-1 output will be in Z_q (q is 161 bits)
@@ -33,9 +35,7 @@ public class Utilities {
             byte [] hash  = sha1.digest();
             //hash = reduced_byte_count(hash);
 
-            String value = Hex.toHexString(hash);
-
-            return value;
+             return Hex.toHexString(hash);
 
          }catch(NoSuchAlgorithmException e){
              System.out.println("Error, setting output to NULL");
