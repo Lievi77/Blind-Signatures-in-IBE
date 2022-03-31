@@ -10,7 +10,7 @@ public class Client {
     public Scanner inputScanner;
     private final String email;
     private Credential credential;
-    private SystemParameters sys_params;
+    private SystemParameters systemParameters;
     private ECPoint user_ec_point;
     private ECPoint P_prime;
     private BigInteger r;
@@ -28,7 +28,7 @@ public class Client {
     }
 
     public void setSystemParameters(SystemParameters params) {
-        this.sys_params = params;
+        this.systemParameters = params;
     }
 
     // getter
@@ -39,9 +39,9 @@ public class Client {
     // this method sets a new credential for the client
     public void requestCredential(CA admin) {
 
-        this.sys_params = admin.get_system_parameters();
+        this.systemParameters = admin.get_system_parameters();
 
-        BigInteger q = sys_params.get_q();
+        BigInteger q = systemParameters.get_q();
 
         // following the diagram
         BigInteger a_zero = admin.generate_a_zero();
@@ -51,38 +51,36 @@ public class Client {
 
         // hardcoded "random"
         // Example of programming with assertion
-        alpha_one = BigInteger.valueOf(89); // blinding factor
+        alpha_one = new BigInteger(q.bitLength()-1, Utilities.secureRandom); // blinding factor
         this.alpha= alpha_one;
-        System.out.println("Alpha_1 (blinding factor) : " + alpha_one);
+        //System.out.println("Alpha_1 (blinding factor) : " + alpha_one);
         assert alpha_one.compareTo(q) < 0 : "Value needs to be less than q";
         assert alpha_one.gcd(q).equals(BigInteger.ONE);
 
-        alpha_two = BigInteger.valueOf(890);
-        System.out.println("Alpha_two: " + alpha_two);
+        alpha_two = new BigInteger(q.bitLength()-1, Utilities.secureRandom);
+        //System.out.println("Alpha_two: " + alpha_two);
         assert alpha_two.compareTo(q) < 0 : "Value needs to be less than q";
 
-        alpha_three = BigInteger.valueOf(233);
-        System.out.println("Alpha_three: " + alpha_three);
+        alpha_three = new BigInteger(q.bitLength()-1, Utilities.secureRandom);;
+        //System.out.println("Alpha_three: " + alpha_three);
         assert alpha_three.compareTo(q) < 0 : "Value needs to be less than q";
 
         // create credential
         // here in the credential, we put as x_1, x_2 the coordinates
         // of the EC
-
-        System.out.println("-->Requesting EC point for " + email);
-
+        //System.out.println("-->Requesting EC point for " + email);
         ECPoint assigned_point = admin.generate_user_point(email);
         this.user_ec_point = assigned_point;
-        r = BigInteger.valueOf(90);
+        r = BigInteger.valueOf(90); //for now r is fixed for testing
         P_prime = user_ec_point.multiply(r);
 
         String EC_x = assigned_point.getXCoord().toString();
         String EC_y = assigned_point.getYCoord().toString();
 
-        System.out.println("EC_x: " + EC_x);
-        System.out.println("EC_y: " + EC_y);
+        //System.out.println("EC_x: " + EC_x);
+        //System.out.println("EC_y: " + EC_y);
 
-        credential = new Credential(sys_params, EC_x, EC_y, alpha_one);
+        credential = new Credential(systemParameters, EC_x, EC_y, alpha_one);
         // to get h,as in the protocol , call credential.get_blinded_public_key
 
         BigInteger c_prime_zero = this.generate_c_prime_zero(alpha_two, alpha_three, a_zero);
@@ -93,13 +91,13 @@ public class Client {
 
         assert c_zero.compareTo(q) < 0 : "Value needs to be less than q";
 
-        System.out.println("c_prime_zero: " + c_prime_zero);
-        System.out.println("c_zero: " + c_zero);
+        //System.out.println("c_prime_zero: " + c_prime_zero);
+        //System.out.println("c_zero: " + c_zero);
 
         // now, send c_zero to CA
         BigInteger r_zero = admin.generate_r_zero(c_zero, credential.get_x1_big_int(), credential.get_x2_big_int());
 
-        System.out.println("r_zero: " + r_zero);
+       // System.out.println("r_zero: " + r_zero);
 
         boolean isValid = this.verify_signature(a_zero, r_zero, c_zero);
 
@@ -115,14 +113,13 @@ public class Client {
 
         } else {
             System.out.println("Error!!!");
-
         }
 
     }
 
     private boolean verify_signature(BigInteger a_zero, BigInteger r_zero, BigInteger c_zero) {
-        BigInteger g_0 = sys_params.get_g_0();
-        BigInteger p = sys_params.get_p();
+        BigInteger g_0 = systemParameters.get_g_0();
+        BigInteger p = systemParameters.get_p();
 
         BigInteger g_zero_pow_c_zero = g_0.modPow(c_zero, p);
 
@@ -130,17 +127,17 @@ public class Client {
 
         BigInteger may_be_a_zero = g_zero_pow_c_zero.multiply(pow_r_zero).mod(p);
 
-        System.out.println("--> a_zero " + a_zero + " ?= " + "funky_part " + may_be_a_zero);
+        //System.out.println("--> a_zero " + a_zero + " ?= " + "funky_part " + may_be_a_zero);
 
-        return a_zero.compareTo(may_be_a_zero) == 0;
+        return a_zero.equals(may_be_a_zero);
     }
 
     private BigInteger generate_c_prime_zero(BigInteger alpha_two, BigInteger alpha_three, BigInteger a_zero) {
 
-        BigInteger q = sys_params.get_q();
+        BigInteger q = systemParameters.get_q();
         BigInteger h = this.credential.get_blinded_public_key();
-        BigInteger g_0 = sys_params.get_g_0();
-        BigInteger p = sys_params.get_p();
+        BigInteger g_0 = systemParameters.get_g_0();
+        BigInteger p = systemParameters.get_p();
 
         BigInteger g_zero_pow_alpha_two = g_0.modPow(alpha_two, p);
         BigInteger middle_part = credential.get_unblinded_public_key().modPow(alpha_three, p);
@@ -188,11 +185,11 @@ public class Client {
         System.out.println("~~~~ Begin Show Protocol");
 
         // get everything from system parameters
-        BigInteger q = this.sys_params.get_q();
-        BigInteger p = this.sys_params.get_p();
-        BigInteger g_1 = this.sys_params.get_g_1();
-        BigInteger g_2 = this.sys_params.get_g_2();
-        BigInteger h_0 = this.sys_params.get_h_0();
+        BigInteger q = this.systemParameters.get_q();
+        BigInteger p = this.systemParameters.get_p();
+        BigInteger g_1 = this.systemParameters.get_g_1();
+        BigInteger g_2 = this.systemParameters.get_g_2();
+        BigInteger h_0 = this.systemParameters.get_h_0();
 
         // get attributes from credential
         BigInteger x_1 = credential.get_x1_big_int();
@@ -242,17 +239,16 @@ public class Client {
 
     public CipherTextTuple sendMessage(String receiver_public_key, IdentityBasedEncryption ibe){
 
-        String message = "Pochita";
-        CipherTextTuple cipherText = ibe.encrypt(message,receiver_public_key);
+        String message = "Brandon+Pochita=<3";
 
-        return cipherText;
+        return ibe.encrypt(message,receiver_public_key);
     }
 
     //must be run after requestCredential
     public BigInteger blindCredentialX(){
         //Double check with adams
         // random r_x in Z_q
-        BigInteger q = sys_params.get_q();
+        BigInteger q = systemParameters.get_q();
         
         BigInteger x = user_ec_point.getXCoord().toBigInteger().mod(q);
         BigInteger x_prime = P_prime.getXCoord().toBigInteger().mod(q);
@@ -265,10 +261,10 @@ public class Client {
 
         //C_x = C^(r_x) = g1^x' . g2^(r_x)y . h0^(r_x)alpha
 
-        BigInteger g_1 = sys_params.get_g_1();
-        BigInteger g_2 = sys_params.get_g_2();
-        BigInteger h_0 = sys_params.get_h_0();
-        BigInteger p = sys_params.get_p();
+        BigInteger g_1 = systemParameters.get_g_1();
+        BigInteger g_2 = systemParameters.get_g_2();
+        BigInteger h_0 = systemParameters.get_h_0();
+        BigInteger p = systemParameters.get_p();
         BigInteger y = user_ec_point.getYCoord().toBigInteger();
 
         BigInteger g_1_pow_x_prime = g_1.modPow(x_prime,p);
@@ -284,8 +280,8 @@ public class Client {
     public BigInteger blindCredentialY(){
         //Double check with adams
         // random r_x in Z_q
-        BigInteger q = sys_params.get_q();
-        BigInteger p = sys_params.get_p();
+        BigInteger q = systemParameters.get_q();
+        BigInteger p = systemParameters.get_p();
 
         BigInteger x = user_ec_point.getXCoord().toBigInteger();
         BigInteger y = user_ec_point.getYCoord().toBigInteger().mod(q);
@@ -297,9 +293,9 @@ public class Client {
         r_y = y_prime.multiply(y_inv).mod(q); //may cause a bug
         assert (r_y.multiply(y).mod(q)).equals(y_prime) : "must be equal";
 
-        BigInteger g_1 = sys_params.get_g_1();
-        BigInteger g_2 = sys_params.get_g_2();
-        BigInteger h_0 = sys_params.get_h_0();
+        BigInteger g_1 = systemParameters.get_g_1();
+        BigInteger g_2 = systemParameters.get_g_2();
+        BigInteger h_0 = systemParameters.get_h_0();
         //C_y = C^(r_y) = g1^(r_y)x . g2^y' . h0^(r_y)alpha.
         BigInteger g1_pow_r_y_x = g_1.modPow(r_y.multiply(x),p);
         BigInteger g2_pow_y_prime = g_2.modPow(y_prime,p);
