@@ -61,11 +61,11 @@ public class Credential {
 
         //unblinded public key
         this.unblinded_public_key = base.multiply(h_0).mod(p);
-        System.out.println("--> Unblinded public key, credential: " + unblinded_public_key);
+        //System.out.println("--> Unblinded public key, credential: " + unblinded_public_key);
 
         //blind public key
         this.blinded_public_key =  unblinded_public_key.modPow(alpha_one,p);
-        System.out.println("--> Blinded public key, credential: " + blinded_public_key);
+        //System.out.println("--> Blinded public key, credential: " + blinded_public_key);
 
         this.show_protocol_brands_public_key = g_one_pow_x_1.multiply(g_two_pow_x_2).multiply(h_0_pow_alpha).mod(p);
 
@@ -101,7 +101,7 @@ public class Credential {
 
 
     public void printSignature(){
-        System.out.println("c'0 : " +  c_prime_zero);
+        System.out.println("c'0: " +  c_prime_zero);
         System.out.println("r'0: " + r_prime_zero);
     }
 

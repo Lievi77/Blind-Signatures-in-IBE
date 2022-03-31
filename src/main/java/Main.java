@@ -17,23 +17,29 @@ public class Main{
             Print message to confirm
          */
 
+        System.out.println("~~ Setup ~~");
         //Create PKG/IBE wrapper class for issuing private keys
+        System.out.println("Creating PKG...");
         PKG pkg = new PKG();
-
         //Get instance of IBE in wrapper class for use in encrypting
         IdentityBasedEncryption ibe = pkg.getInstance();
 
-        //Create CA
+        System.out.println("Creating CA...");
         CA certificateAuthority = new CA();
 
         //Create Bob and Alice and receive their credentials
+        System.out.println("Creating Bob (sender)...");
         Client Bob = new Client("bob@gmail.com");
+        System.out.println("Issuing digital credential for Bob");
         Bob.requestCredential(certificateAuthority);
 
+        System.out.println("Creating Alice (receiver)...");
         Client Alice = new Client("alice@gmail.com");
+        System.out.println("Issuing digital credential for Alice");
         Alice.requestCredential(certificateAuthority);
 
         //Get blinded credentials
+        System.out.println("Blinding Alice's Credentials...");
         BigInteger blinded_c_x = Alice.blindCredentialX();
         BigInteger blinded_c_y = Alice.blindCredentialY();
 
