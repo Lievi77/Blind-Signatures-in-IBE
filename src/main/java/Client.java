@@ -18,6 +18,10 @@ public class Client {
     private BigInteger r_y; // used to blind and unblind C_y
     private BigInteger alpha; //blinding factor
 
+    // Blinded credentials
+    private BigInteger blinded_cx;
+    private BigInteger blinded_cy;
+
     public Client(String email) {
         this.email = email;
         this.inputScanner = new Scanner(System.in);
@@ -245,7 +249,7 @@ public class Client {
     }
 
     //must be run after requestCredential
-    public BigInteger blindCredentialX(){
+    public void blindCredentialX(){
         //Double check with adams
         // random r_x in Z_q
         BigInteger q = systemParameters.get_q();
@@ -271,13 +275,12 @@ public class Client {
         BigInteger g_2_pow_r_x_y = g_2.modPow(r_x.multiply(y), p );
         BigInteger h_0_pow_r_x_alpha = h_0.modPow(r_x.multiply(alpha),p);
 
-        BigInteger C_x = g_1_pow_x_prime.multiply(g_2_pow_r_x_y).multiply(h_0_pow_r_x_alpha).mod(q);
+        this.blinded_cx = g_1_pow_x_prime.multiply(g_2_pow_r_x_y).multiply(h_0_pow_r_x_alpha).mod(q);
 
-        return C_x;
     }
 
     //must be run after requestCredential
-    public BigInteger blindCredentialY(){
+    public void blindCredentialY(){
         //Double check with adams
         // random r_x in Z_q
         BigInteger q = systemParameters.get_q();
@@ -300,9 +303,9 @@ public class Client {
         BigInteger g1_pow_r_y_x = g_1.modPow(r_y.multiply(x),p);
         BigInteger g2_pow_y_prime = g_2.modPow(y_prime,p);
         BigInteger h0_pow_r_y = h_0.modPow(r_y.multiply(alpha),p);
-        BigInteger C_y = (g1_pow_r_y_x.multiply(g2_pow_y_prime).multiply(h0_pow_r_y)).mod(q);
 
-        return C_y;
+        this.blinded_cy = (g1_pow_r_y_x.multiply(g2_pow_y_prime).multiply(h0_pow_r_y)).mod(q);
+
     }
 
 }

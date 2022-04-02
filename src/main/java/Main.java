@@ -40,8 +40,13 @@ public class Main{
 
         //Get blinded credentials
         System.out.println("Blinding Alice's Credentials...");
-        BigInteger blinded_c_x = Alice.blindCredentialX();
-        BigInteger blinded_c_y = Alice.blindCredentialY();
+        Alice.blindCredentialX();
+        Alice.blindCredentialY();
+
+        SystemParameters params = certificateAuthority.get_system_parameters();
+
+        //show and verify credentials
+        Alice.do_show_protocol_brands();
 
 
         //Get private key and create cipher text, print out to prove it works Temporary method

@@ -7,6 +7,7 @@ import cryptid.ibe.exception.SetupException;
 
 import javax.swing.plaf.SeparatorUI;
 import java.io.PipedReader;
+import java.math.BigInteger;
 
 //Public wrapper class
 public class PKG {
@@ -28,5 +29,12 @@ public class PKG {
     public PrivateKey getPrivateKey(){
 
         return ibe.extract("test");
+    }
+
+    public void verifyCredential(BigInteger h, SystemParameters params){
+        //verification protocol
+
+
+
     }
 }
