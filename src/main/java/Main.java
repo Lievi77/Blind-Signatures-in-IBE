@@ -1,10 +1,4 @@
-import cryptid.CryptID;
 import cryptid.ibe.IdentityBasedEncryption;
-import cryptid.ibe.domain.CipherTextTuple;
-import cryptid.ibe.domain.PrivateKey;
-import cryptid.ibe.domain.SecurityLevel;
-
-import java.math.BigInteger;
 
 public class Main{
     public static void main(String[] args) throws Exception{
@@ -43,17 +37,19 @@ public class Main{
         Alice.blindCredentialX();
         Alice.blindCredentialY();
 
-        SystemParameters params = certificateAuthority.get_system_parameters();
-
         //show and verify credentials
-        Alice.do_show_protocol_brands();
+        Alice.showBlindedCredentialsToPKG(pkg);
 
+        //after verification, pkg must compute blinded private key k'
+
+        //Alice must unblind private key k' -> k
+        //and use k to decrypt
 
         //Get private key and create cipher text, print out to prove it works Temporary method
-        PrivateKey privateKey = ibe.extract(Alice.getEmail());
-        CipherTextTuple c = Bob.sendMessage(Alice.getEmail(), ibe);
-
-        ibe.decrypt(privateKey, c).ifPresent(System.out::println);
+//        PrivateKey privateKey = ibe.extract(Alice.getEmail());
+//        CipherTextTuple c = Bob.sendMessage(Alice.getEmail(), ibe);
+//
+//        ibe.decrypt(privateKey, c).ifPresent(System.out::println);
 
     }
 }

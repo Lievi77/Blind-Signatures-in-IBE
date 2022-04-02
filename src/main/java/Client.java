@@ -184,9 +184,7 @@ public class Client {
 
     // Show protocol
     // i.e, proof of knowledge
-    public void do_show_protocol_brands() {
-
-        System.out.println("~~~~ Begin Show Protocol");
+    public void showBlindedCredentialsToPKG(PKG pkg) {
 
         // get everything from system parameters
         BigInteger q = this.systemParameters.get_q();
