@@ -10,6 +10,8 @@ public class Utilities {
     //class of static method
     public static SecureRandom secureRandom = new SecureRandom();
 
+    public static SystemParameters systemParameters;
+
     public static BigInteger str_to_big_int(String s){
         //Every single SHA-1 output will be in Z_q (q is 161 bits)
 
@@ -41,6 +43,10 @@ public class Utilities {
              System.out.println("Error, setting output to NULL");
              return "NULL";
          }
+    }
+
+    public static void setSystemParameters(CA ca){
+        Utilities.systemParameters = ca.get_system_parameters();
     }
 
 }

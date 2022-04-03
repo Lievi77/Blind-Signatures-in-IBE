@@ -20,6 +20,7 @@ public class Main{
 
         System.out.println("Creating CA...");
         CA certificateAuthority = new CA();
+        Utilities.setSystemParameters(certificateAuthority);
 
         //Create Bob and Alice and receive their credentials
         System.out.println("Creating Bob (sender)...");
@@ -41,6 +42,7 @@ public class Main{
         Alice.showBlindedCredentialsToPKG(pkg);
 
         //after verification, pkg must compute blinded private key k'
+
 
         //Alice must unblind private key k' -> k
         //and use k to decrypt

@@ -201,9 +201,9 @@ public class Client {
         // generate a
         // we only have 2 generators, thus we spawn 3 w's
         // one for each g_i and one for h_0
-        BigInteger w_1 = BigInteger.valueOf(1300);
-        BigInteger w_2 = BigInteger.valueOf(1400);
-        BigInteger w_3 = BigInteger.valueOf(1500);
+        BigInteger w_1 = BigInteger.valueOf(29305);
+        BigInteger w_2 = BigInteger.valueOf(41999);
+        BigInteger w_3 = BigInteger.valueOf(1089920);
         assert w_1.compareTo(q) < 0 : "Must be Less than q";
         assert w_2.compareTo(q) < 0 : "Must be Less than q";
         assert w_3.compareTo(q) < 0 : "Must be Less than q";
@@ -214,10 +214,7 @@ public class Client {
 
         BigInteger a = g_1_pow_w_1.multiply(g_2_pow_w_2).multiply(h_0_pow_w_3).mod(p);
 
-        // Here, we are supposed to send h, signature, a to Bob
-        // assume we already done so and have received c
-
-        BigInteger c = BigInteger.valueOf(7000);
+        BigInteger c = pkg.get_show_protocol_c();
 
         // create r's
         BigInteger r_1 = c.multiply(x_1).add(w_1).mod(q);
@@ -226,22 +223,15 @@ public class Client {
 
         // we send all r's, assume we did so
 
-        // provisional check
-        BigInteger h_pow_c = credential.get_brands_show_protocol_public_key().modPow(c, p);
-        BigInteger left_side = h_pow_c.multiply(a).mod(p);
+        pkg.verify_credential_signature(credential, a, r_1, r_2, r_3);
 
-        BigInteger g_1_pow_r_1 = g_1.modPow(r_1, p);
-        BigInteger g_2_pow_r_2 = g_2.modPow(r_2, p);
-        BigInteger h_0_pow_r_3 = h_0.modPow(r_3, p);
-        BigInteger right_side = g_1_pow_r_1.multiply(g_2_pow_r_2).multiply(h_0_pow_r_3).mod(p);
 
-        System.out.println("Check passed: " + left_side.equals(right_side));
 
     }
 
     public CipherTextTuple sendMessage(String receiver_public_key, IdentityBasedEncryption ibe){
 
-        String message = "Brandon+Pochita=<3";
+        String message = "Makima is the control devil";
 
         return ibe.encrypt(message,receiver_public_key);
     }
