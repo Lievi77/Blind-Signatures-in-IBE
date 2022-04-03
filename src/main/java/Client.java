@@ -1,9 +1,7 @@
-import cryptid.ellipticcurve.EllipticCurve;
 import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.CipherTextTuple;
 import cryptid.ibe.domain.PrivateKey;
-import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
@@ -26,13 +24,27 @@ public class Client {
     private BigInteger blinded_cx;
     private BigInteger blinded_cy;
 
+
+
     public Client(String email) {
         this.email = email;
         this.inputScanner = new Scanner(System.in);
     }
 
-    public String get_blinded_public_key(){
-        return blinded_cx.toString() + blinded_cy;
+    public String get_x(){
+        return user_ec_point.getXCoord().toBigInteger().toString();
+    }
+
+    public String get_y(){
+        return user_ec_point.getYCoord().toBigInteger().toString();
+    }
+
+    public String get_blinded_x(){
+        return P_prime.getXCoord().toBigInteger().toString();
+    }
+
+    public String get_blinded_y(){
+        return P_prime.getYCoord().toBigInteger().toString();
     }
 
     public String getEmail() {
@@ -231,7 +243,6 @@ public class Client {
     }
 
     public CipherTextTuple sendMessage(String receiver_public_key, IdentityBasedEncryption ibe){
-
         String message = "Makima is the control devil";
 
         return ibe.encrypt(message,receiver_public_key);
@@ -239,7 +250,6 @@ public class Client {
 
     //must be run after requestCredential
     public void blindCredentialX(){
-        //Double check with adams
         // random r_x in Z_q
         BigInteger q = systemParameters.get_q();
         
@@ -283,7 +293,8 @@ public class Client {
         BigInteger y_inv = y.modInverse(q);
 
         r_y = y_prime.multiply(y_inv).mod(q); //may cause a bug
-        assert (r_y.multiply(y).mod(q)).equals(y_prime) : "must be equal";
+        assert r_y.multiply(y).mod(q).equals(y_prime) : "must be equal";
+        assert r_y.modInverse(q).multiply(y_prime).mod(q).equals(y): "equal";
 
         BigInteger g_1 = systemParameters.get_g_1();
         BigInteger g_2 = systemParameters.get_g_2();
@@ -301,16 +312,18 @@ public class Client {
 
         BigInteger q = systemParameters.get_q();
 
-        BigInteger r_inv = r.modInverse(q);
+        BigInteger rx_inv = r_x.modInverse(q).mod(q);
+        BigInteger ry_inv = r_y.modInverse(q).mod(q);
 
-        AffinePoint data = pk.getData();
-        BigInteger x_coord =  data.getX();
-        BigInteger y_coord = data.getY();
+        AffinePoint blinded_pk_point = pk.getData();
+        BigInteger blinded_x = blinded_pk_point.getX().mod(q);
+        BigInteger unblinded_x_coord =  blinded_x.multiply(rx_inv).mod(q);
 
-        //TODO: figure out how to unblind the point
-        System.out.println(ca.verify_user_point(getEmail()));
+        BigInteger unblinded_y_coord = blinded_pk_point.getY().multiply(ry_inv).mod(q);
 
-    return pk;
+        AffinePoint unblinded_point = new AffinePoint(unblinded_x_coord,unblinded_y_coord);
+
+        return new PrivateKey(unblinded_point);
     }
 
 }
