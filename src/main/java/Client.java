@@ -1,5 +1,9 @@
+import cryptid.ellipticcurve.EllipticCurve;
+import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.CipherTextTuple;
+import cryptid.ibe.domain.PrivateKey;
+import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
@@ -13,7 +17,7 @@ public class Client {
     private SystemParameters systemParameters;
     private ECPoint user_ec_point;
     private ECPoint P_prime;
-    private BigInteger r;
+    private BigInteger r; // integer used to blind the EC point
     private BigInteger r_x; // used to blind and unblind C_x
     private BigInteger r_y; // used to blind and unblind C_y
     private BigInteger alpha; //blinding factor
@@ -25,6 +29,10 @@ public class Client {
     public Client(String email) {
         this.email = email;
         this.inputScanner = new Scanner(System.in);
+    }
+
+    public String get_blinded_public_key(){
+        return blinded_cx.toString() + blinded_cy;
     }
 
     public String getEmail() {
@@ -57,12 +65,12 @@ public class Client {
         // Example of programming with assertion
         alpha_one = new BigInteger(q.bitLength()-1, Utilities.secureRandom); // blinding factor
         this.alpha= alpha_one;
-        //System.out.println("Alpha_1 (blinding factor) : " + alpha_one);
+
         assert alpha_one.compareTo(q) < 0 : "Value needs to be less than q";
         assert alpha_one.gcd(q).equals(BigInteger.ONE);
 
         alpha_two = new BigInteger(q.bitLength()-1, Utilities.secureRandom);
-        //System.out.println("Alpha_two: " + alpha_two);
+
         assert alpha_two.compareTo(q) < 0 : "Value needs to be less than q";
 
         alpha_three = new BigInteger(q.bitLength()-1, Utilities.secureRandom);;
@@ -130,8 +138,6 @@ public class Client {
         BigInteger pow_r_zero = credential.get_unblinded_public_key().modPow(r_zero, p);
 
         BigInteger may_be_a_zero = g_zero_pow_c_zero.multiply(pow_r_zero).mod(p);
-
-        //System.out.println("--> a_zero " + a_zero + " ?= " + "funky_part " + may_be_a_zero);
 
         return a_zero.equals(may_be_a_zero);
     }
@@ -221,12 +227,7 @@ public class Client {
         BigInteger r_2 = c.multiply(x_2).add(w_2).mod(q);
         BigInteger r_3 = c.multiply(alpha).add(w_3).mod(q);
 
-        // we send all r's, assume we did so
-
         pkg.verify_credential_signature(credential, a, r_1, r_2, r_3);
-
-
-
     }
 
     public CipherTextTuple sendMessage(String receiver_public_key, IdentityBasedEncryption ibe){
@@ -294,6 +295,22 @@ public class Client {
 
         this.blinded_cy = (g1_pow_r_y_x.multiply(g2_pow_y_prime).multiply(h0_pow_r_y)).mod(q);
 
+    }
+
+    public PrivateKey unblind_private_key(PrivateKey pk, CA ca){
+
+        BigInteger q = systemParameters.get_q();
+
+        BigInteger r_inv = r.modInverse(q);
+
+        AffinePoint data = pk.getData();
+        BigInteger x_coord =  data.getX();
+        BigInteger y_coord = data.getY();
+
+        //TODO: figure out how to unblind the point
+        System.out.println(ca.verify_user_point(getEmail()));
+
+    return pk;
     }
 
 }

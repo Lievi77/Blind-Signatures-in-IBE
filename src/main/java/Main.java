@@ -1,4 +1,6 @@
 import cryptid.ibe.IdentityBasedEncryption;
+import cryptid.ibe.domain.CipherTextTuple;
+import cryptid.ibe.domain.PrivateKey;
 
 public class Main{
     public static void main(String[] args) throws Exception{
@@ -28,10 +30,14 @@ public class Main{
         System.out.println("Issuing digital credential for Bob");
         Bob.requestCredential(certificateAuthority);
 
+
         System.out.println("Creating Alice (receiver)...");
         Client Alice = new Client("alice@gmail.com");
         System.out.println("Issuing digital credential for Alice");
         Alice.requestCredential(certificateAuthority);
+
+        System.out.println("Bob sends an encrypted message to Alice...");
+        CipherTextTuple c = Bob.sendMessage(Alice.getEmail(),ibe);
 
         //Get blinded credentials
         System.out.println("Blinding Alice's Credentials...");
@@ -42,16 +48,13 @@ public class Main{
         Alice.showBlindedCredentialsToPKG(pkg);
 
         //after verification, pkg must compute blinded private key k'
-
-
-        //Alice must unblind private key k' -> k
-        //and use k to decrypt
-
-        //Get private key and create cipher text, print out to prove it works Temporary method
-//        PrivateKey privateKey = ibe.extract(Alice.getEmail());
-//        CipherTextTuple c = Bob.sendMessage(Alice.getEmail(), ibe);
-//
-//        ibe.decrypt(privateKey, c).ifPresent(System.out::println);
+        System.out.println("PKG issuing (blinded) private key...");
+        String blinding_public_key = Alice.get_blinded_public_key();
+        PrivateKey blinded_privateKey = ibe.extract(blinding_public_key);
+        System.out.println("Alice unblinds private key...");
+        PrivateKey unblinded_private_key = Alice.unblind_private_key(blinded_privateKey, certificateAuthority);
+        System.out.println("Alice now decrypts the message...");
+        ibe.decrypt(unblinded_private_key, c).ifPresent(System.out::println);
 
     }
 }
