@@ -32,7 +32,7 @@ public class Testing {
          * Can be accessed via alice.credential
          */
         // now, use showProtocol
-        alice.do_show_protocol_brands();
+        //alice.showBlindedCredentialsToPKG();
 
     }
 

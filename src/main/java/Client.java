@@ -1,7 +1,14 @@
+import cryptid.ellipticcurve.EllipticCurve;
+import cryptid.ellipticcurve.TypeOneEllipticCurve;
+import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.IdentityBasedEncryption;
+import cryptid.ibe.PrivateKeyGenerator;
 import cryptid.ibe.domain.CipherTextTuple;
+import cryptid.ibe.domain.PrivateKey;
+import cryptid.ibe.domain.PublicParameters;
 import org.bouncycastle.math.ec.ECPoint;
 
+import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.Scanner;
 
@@ -13,14 +20,36 @@ public class Client {
     private SystemParameters systemParameters;
     private ECPoint user_ec_point;
     private ECPoint P_prime;
-    private BigInteger r;
+    private BigInteger r; // integer used to blind the EC point
     private BigInteger r_x; // used to blind and unblind C_x
     private BigInteger r_y; // used to blind and unblind C_y
     private BigInteger alpha; //blinding factor
 
+    // Blinded credentials
+    private BigInteger blinded_cx;
+    private BigInteger blinded_cy;
+
+
+
     public Client(String email) {
         this.email = email;
         this.inputScanner = new Scanner(System.in);
+    }
+
+    public String get_x(){
+        return user_ec_point.getXCoord().toString();
+    }
+
+    public String get_y(){
+        return user_ec_point.getYCoord().toString();
+    }
+
+    public String get_blinded_x(){
+        return P_prime.getXCoord().toString();
+    }
+
+    public String get_blinded_y(){
+        return P_prime.getYCoord().toString();
     }
 
     public String getEmail() {
@@ -53,12 +82,12 @@ public class Client {
         // Example of programming with assertion
         alpha_one = new BigInteger(q.bitLength()-1, Utilities.secureRandom); // blinding factor
         this.alpha= alpha_one;
-        //System.out.println("Alpha_1 (blinding factor) : " + alpha_one);
+
         assert alpha_one.compareTo(q) < 0 : "Value needs to be less than q";
         assert alpha_one.gcd(q).equals(BigInteger.ONE);
 
         alpha_two = new BigInteger(q.bitLength()-1, Utilities.secureRandom);
-        //System.out.println("Alpha_two: " + alpha_two);
+
         assert alpha_two.compareTo(q) < 0 : "Value needs to be less than q";
 
         alpha_three = new BigInteger(q.bitLength()-1, Utilities.secureRandom);;
@@ -76,9 +105,6 @@ public class Client {
 
         String EC_x = assigned_point.getXCoord().toString();
         String EC_y = assigned_point.getYCoord().toString();
-
-        //System.out.println("EC_x: " + EC_x);
-        //System.out.println("EC_y: " + EC_y);
 
         credential = new Credential(systemParameters, EC_x, EC_y, alpha_one);
         // to get h,as in the protocol , call credential.get_blinded_public_key
@@ -127,7 +153,7 @@ public class Client {
 
         BigInteger may_be_a_zero = g_zero_pow_c_zero.multiply(pow_r_zero).mod(p);
 
-        //System.out.println("--> a_zero " + a_zero + " ?= " + "funky_part " + may_be_a_zero);
+        assert a_zero.equals(may_be_a_zero);
 
         return a_zero.equals(may_be_a_zero);
     }
@@ -180,9 +206,7 @@ public class Client {
 
     // Show protocol
     // i.e, proof of knowledge
-    public void do_show_protocol_brands() {
-
-        System.out.println("~~~~ Begin Show Protocol");
+    public void showBlindedCredentialsToPKG(PKG pkg, Credential credential_to_show) {
 
         // get everything from system parameters
         BigInteger q = this.systemParameters.get_q();
@@ -192,16 +216,16 @@ public class Client {
         BigInteger h_0 = this.systemParameters.get_h_0();
 
         // get attributes from credential
-        BigInteger x_1 = credential.get_x1_big_int();
-        BigInteger x_2 = credential.get_x2_big_int();
-        BigInteger alpha = credential.get_alpha_one();
+        BigInteger x_1 = credential_to_show.get_x1_big_int();
+        BigInteger x_2 = credential_to_show.get_x2_big_int();
+        BigInteger alpha = credential_to_show.get_alpha_one();
 
         // generate a
         // we only have 2 generators, thus we spawn 3 w's
         // one for each g_i and one for h_0
-        BigInteger w_1 = BigInteger.valueOf(1300);
-        BigInteger w_2 = BigInteger.valueOf(1400);
-        BigInteger w_3 = BigInteger.valueOf(1500);
+        BigInteger w_1 = BigInteger.valueOf(29305);
+        BigInteger w_2 = BigInteger.valueOf(41999);
+        BigInteger w_3 = BigInteger.valueOf(1089920);
         assert w_1.compareTo(q) < 0 : "Must be Less than q";
         assert w_2.compareTo(q) < 0 : "Must be Less than q";
         assert w_3.compareTo(q) < 0 : "Must be Less than q";
@@ -212,41 +236,24 @@ public class Client {
 
         BigInteger a = g_1_pow_w_1.multiply(g_2_pow_w_2).multiply(h_0_pow_w_3).mod(p);
 
-        // Here, we are supposed to send h, signature, a to Bob
-        // assume we already done so and have received c
-
-        BigInteger c = BigInteger.valueOf(7000);
+        BigInteger c = pkg.get_show_protocol_c();
 
         // create r's
         BigInteger r_1 = c.multiply(x_1).add(w_1).mod(q);
         BigInteger r_2 = c.multiply(x_2).add(w_2).mod(q);
         BigInteger r_3 = c.multiply(alpha).add(w_3).mod(q);
 
-        // we send all r's, assume we did so
-
-        // provisional check
-        BigInteger h_pow_c = credential.get_brands_show_protocol_public_key().modPow(c, p);
-        BigInteger left_side = h_pow_c.multiply(a).mod(p);
-
-        BigInteger g_1_pow_r_1 = g_1.modPow(r_1, p);
-        BigInteger g_2_pow_r_2 = g_2.modPow(r_2, p);
-        BigInteger h_0_pow_r_3 = h_0.modPow(r_3, p);
-        BigInteger right_side = g_1_pow_r_1.multiply(g_2_pow_r_2).multiply(h_0_pow_r_3).mod(p);
-
-        System.out.println("Check passed: " + left_side.equals(right_side));
-
+        pkg.verify_credential_signature(credential_to_show, a, r_1, r_2, r_3);
     }
 
     public CipherTextTuple sendMessage(String receiver_public_key, IdentityBasedEncryption ibe){
-
-        String message = "Brandon+Pochita=<3";
+        String message = "Makima is the control devil";
 
         return ibe.encrypt(message,receiver_public_key);
     }
 
     //must be run after requestCredential
-    public BigInteger blindCredentialX(){
-        //Double check with adams
+    public Credential blindCredentialX(){
         // random r_x in Z_q
         BigInteger q = systemParameters.get_q();
         
@@ -271,13 +278,13 @@ public class Client {
         BigInteger g_2_pow_r_x_y = g_2.modPow(r_x.multiply(y), p );
         BigInteger h_0_pow_r_x_alpha = h_0.modPow(r_x.multiply(alpha),p);
 
-        BigInteger C_x = g_1_pow_x_prime.multiply(g_2_pow_r_x_y).multiply(h_0_pow_r_x_alpha).mod(q);
+        this.blinded_cx = g_1_pow_x_prime.multiply(g_2_pow_r_x_y).multiply(h_0_pow_r_x_alpha).mod(q);
 
-        return C_x;
+        return new Credential(systemParameters,x_prime.toString(),y.toString(), alpha, r_x);
     }
 
     //must be run after requestCredential
-    public BigInteger blindCredentialY(){
+    public Credential blindCredentialY(){
         //Double check with adams
         // random r_x in Z_q
         BigInteger q = systemParameters.get_q();
@@ -291,7 +298,8 @@ public class Client {
         BigInteger y_inv = y.modInverse(q);
 
         r_y = y_prime.multiply(y_inv).mod(q); //may cause a bug
-        assert (r_y.multiply(y).mod(q)).equals(y_prime) : "must be equal";
+        assert r_y.multiply(y).mod(q).equals(y_prime) : "must be equal";
+        assert r_y.modInverse(q).multiply(y_prime).mod(q).equals(y): "equal";
 
         BigInteger g_1 = systemParameters.get_g_1();
         BigInteger g_2 = systemParameters.get_g_2();
@@ -300,9 +308,25 @@ public class Client {
         BigInteger g1_pow_r_y_x = g_1.modPow(r_y.multiply(x),p);
         BigInteger g2_pow_y_prime = g_2.modPow(y_prime,p);
         BigInteger h0_pow_r_y = h_0.modPow(r_y.multiply(alpha),p);
-        BigInteger C_y = (g1_pow_r_y_x.multiply(g2_pow_y_prime).multiply(h0_pow_r_y)).mod(q);
 
-        return C_y;
+        this.blinded_cy = (g1_pow_r_y_x.multiply(g2_pow_y_prime).multiply(h0_pow_r_y)).mod(q);
+
+        return new Credential(systemParameters,x.toString(),y_prime.toString(), alpha, r_y);
+    }
+
+    public PrivateKey unblind_private_key(PrivateKey pk, CA ca){
+        BigInteger q = systemParameters.get_q();
+
+        BigInteger r_inv = r.modInverse(q);
+
+       AffinePoint pk_point = pk.getData();
+
+       TypeOneEllipticCurve ec = TypeOneEllipticCurve.ofOrder(BigInteger.valueOf(11));
+       AffinePoint test = new AffinePoint(user_ec_point.getXCoord().toBigInteger(), user_ec_point.getYCoord().toBigInteger() );
+
+
+
+        return new PrivateKey(test);
     }
 
 }

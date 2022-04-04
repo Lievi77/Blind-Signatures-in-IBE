@@ -25,19 +25,44 @@ public class Credential {
 
     private final BigInteger x_2_as_big_int;
 
+    private BigInteger blinding;
+
     //Credential Signature issued by CA
     private BigInteger c_prime_zero = null; //non-null only after issue protocol is run
     private BigInteger r_prime_zero =  null;
 
     public Credential(SystemParameters params, String x_1, String x_2, BigInteger alpha_one){
         this.system_parameters = params;
+
+        this.blinding = BigInteger.ONE;
+
         this.x_1 = x_1;
-        x_1_as_big_int = Utilities.str_to_big_int(x_1);
+        x_1_as_big_int = Utilities.str_to_big_int(x_1).multiply(blinding);
 
         this.x_2 = x_2;
-        x_2_as_big_int = Utilities.str_to_big_int(x_2);
+        x_2_as_big_int = Utilities.str_to_big_int(x_2).multiply(blinding);
 
-        this.alpha_one = alpha_one;
+        this.alpha_one = alpha_one.multiply(blinding);
+
+
+        this.generate_public_keys();
+
+        id++;
+    }
+    public Credential(SystemParameters params, String x_1, String x_2, BigInteger alpha_one, BigInteger blinding){
+        this.system_parameters = params;
+
+        this.blinding = blinding;
+
+        this.x_1 = x_1;
+        x_1_as_big_int = Utilities.str_to_big_int(x_1).multiply(blinding);
+
+        this.x_2 = x_2;
+        x_2_as_big_int = Utilities.str_to_big_int(x_2).multiply(blinding);
+
+        this.alpha_one = alpha_one.multiply(blinding);
+
+
 
         this.generate_public_keys();
 

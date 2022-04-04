@@ -18,7 +18,7 @@ public class CA {
     private X9ECParameters x9;
     private ArrayList<ECPoint> userPoints;
 
-    private ECPoint ec_generator;
+    private  ECPoint ec_generator;
     private ArrayList<BigInteger> testing = new ArrayList<>();
 
     private final BigInteger q = new BigInteger("2060482539417004714807271807532720159194878157261"); // q is 161 bits
@@ -36,10 +36,8 @@ public class CA {
         x9 = NISTNamedCurves.getByName("P-224");
         masterSecret = BigInteger.ONE;
         ec_generator = this.x9.getG();
-        userPoints = new ArrayList<ECPoint>();
-//        System.out.println("Prime q :" + q);
-//        System.out.println("Prime p: " + p);
-        //System.out.println("Generator g_0 :" + g_0);
+        userPoints = new ArrayList<>();
+
         /*
          * Assertions to ensure pk and pb y_i's and x_0 are within Zq
          */
@@ -51,7 +49,6 @@ public class CA {
 
         //System.out.println("x_0 :" + x_0);
         assert x_0.compareTo(q) < 0 : "x_o must be less than q";
-
     }
 
     public SystemParameters get_system_parameters() {
@@ -95,7 +92,7 @@ public class CA {
 
         // Convert identity to hexadecimal hash and use as BigInteger to generate point
         // on curve, call method to set point in array of points
-        BigInteger input = Utilities.str_to_big_int(identity);;
+        BigInteger input = Utilities.str_to_big_int(identity);
         ECPoint point = this.ec_generator.multiply(input);
         set_user_point(point);
         return point;
