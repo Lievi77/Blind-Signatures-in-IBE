@@ -42,24 +42,29 @@ public class Main{
         CipherTextTuple cipher = Bob.sendMessage(ec_public_key,ibe);
 
         //Get blinded credentials
-        System.out.println("Blinding Alice's Credentials...");
-        Alice.blindCredentialX();
-        Alice.blindCredentialY();
+        System.out.println("Blinding Alice's Credentials...\n");
+        System.out.println("Creating blinded credential C_x");
+        Credential blinded_cx =Alice.blindCredentialX();
+        System.out.println("Created blinded credential C_y\n");
+        Credential blinded_cy = Alice.blindCredentialY();
 
         //show and verify credentials
-        Alice.showBlindedCredentialsToPKG(pkg);
+        System.out.println("Showing blinded credential C_x");
+        Alice.showBlindedCredentialsToPKG(pkg, blinded_cx );
+        System.out.println("Showing blinded credential C_y");
+        Alice.showBlindedCredentialsToPKG(pkg, blinded_cy);
         String blinded_xy_coord = Alice.get_blinded_x() + Alice.get_blinded_y();
         //after verification, pkg must compute blinded private key k'
         System.out.println("PKG issuing (blinded) private key...");
         //System.out.println(blinded_xy_coord);
-        PrivateKey blinded_pk = ibe.extract(ec_public_key);
+        PrivateKey blinded_pk = ibe.extract(blinded_xy_coord);
 
 
         System.out.println("Alice unblinds private key...");
         PrivateKey unblinded_pk = Alice.unblind_private_key(blinded_pk, certificateAuthority);
 
         System.out.println("Alice now decrypts the message...");
-        ibe.decrypt(blinded_pk, cipher).ifPresent(System.out::println);
+        ibe.decrypt(unblinded_pk, cipher).ifPresent(System.out::println);
 
     }
 }

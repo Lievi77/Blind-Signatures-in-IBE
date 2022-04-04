@@ -50,6 +50,8 @@ public class PKG {
         BigInteger h_0_pow_r_3 = h_0.modPow(r_3, p);
         BigInteger right_side = g_1_pow_r_1.multiply(g_2_pow_r_2).multiply(h_0_pow_r_3).mod(p);
 
+        assert left_side.equals(right_side);
+
         System.out.println("Show Protocol Check passed: " + left_side.equals(right_side));
     }
 

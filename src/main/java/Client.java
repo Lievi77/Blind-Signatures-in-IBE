@@ -151,6 +151,8 @@ public class Client {
 
         BigInteger may_be_a_zero = g_zero_pow_c_zero.multiply(pow_r_zero).mod(p);
 
+        assert a_zero.equals(may_be_a_zero);
+
         return a_zero.equals(may_be_a_zero);
     }
 
@@ -202,7 +204,7 @@ public class Client {
 
     // Show protocol
     // i.e, proof of knowledge
-    public void showBlindedCredentialsToPKG(PKG pkg) {
+    public void showBlindedCredentialsToPKG(PKG pkg, Credential credential_to_show) {
 
         // get everything from system parameters
         BigInteger q = this.systemParameters.get_q();
@@ -212,9 +214,9 @@ public class Client {
         BigInteger h_0 = this.systemParameters.get_h_0();
 
         // get attributes from credential
-        BigInteger x_1 = credential.get_x1_big_int();
-        BigInteger x_2 = credential.get_x2_big_int();
-        BigInteger alpha = credential.get_alpha_one();
+        BigInteger x_1 = credential_to_show.get_x1_big_int();
+        BigInteger x_2 = credential_to_show.get_x2_big_int();
+        BigInteger alpha = credential_to_show.get_alpha_one();
 
         // generate a
         // we only have 2 generators, thus we spawn 3 w's
@@ -239,7 +241,7 @@ public class Client {
         BigInteger r_2 = c.multiply(x_2).add(w_2).mod(q);
         BigInteger r_3 = c.multiply(alpha).add(w_3).mod(q);
 
-        pkg.verify_credential_signature(credential, a, r_1, r_2, r_3);
+        pkg.verify_credential_signature(credential_to_show, a, r_1, r_2, r_3);
     }
 
     public CipherTextTuple sendMessage(String receiver_public_key, IdentityBasedEncryption ibe){
@@ -249,7 +251,7 @@ public class Client {
     }
 
     //must be run after requestCredential
-    public void blindCredentialX(){
+    public Credential blindCredentialX(){
         // random r_x in Z_q
         BigInteger q = systemParameters.get_q();
         
@@ -276,10 +278,11 @@ public class Client {
 
         this.blinded_cx = g_1_pow_x_prime.multiply(g_2_pow_r_x_y).multiply(h_0_pow_r_x_alpha).mod(q);
 
+        return new Credential(systemParameters,x_prime.toString(),y.toString(), alpha, r_x);
     }
 
     //must be run after requestCredential
-    public void blindCredentialY(){
+    public Credential blindCredentialY(){
         //Double check with adams
         // random r_x in Z_q
         BigInteger q = systemParameters.get_q();
@@ -306,20 +309,21 @@ public class Client {
 
         this.blinded_cy = (g1_pow_r_y_x.multiply(g2_pow_y_prime).multiply(h0_pow_r_y)).mod(q);
 
+        return new Credential(systemParameters,x.toString(),y_prime.toString(), alpha, r_y);
     }
 
     public PrivateKey unblind_private_key(PrivateKey pk, CA ca){
 
         BigInteger q = systemParameters.get_q();
 
-        BigInteger rx_inv = r_x.modInverse(q).mod(q);
-        BigInteger ry_inv = r_y.modInverse(q).mod(q);
+        BigInteger rx_inv = r_x.modInverse(q);
+        BigInteger ry_inv = r_y.modInverse(q);
 
         AffinePoint blinded_pk_point = pk.getData();
-        BigInteger blinded_x = blinded_pk_point.getX().mod(q);
+        BigInteger blinded_x = blinded_pk_point.getX();
         BigInteger unblinded_x_coord =  blinded_x.multiply(rx_inv).mod(q);
 
-        BigInteger unblinded_y_coord = blinded_pk_point.getY().multiply(ry_inv).mod(q);
+        BigInteger unblinded_y_coord = blinded_pk_point.getY().multiply(ry_inv);
 
         AffinePoint unblinded_point = new AffinePoint(unblinded_x_coord,unblinded_y_coord);
 
