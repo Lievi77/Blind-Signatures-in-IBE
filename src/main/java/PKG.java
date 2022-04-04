@@ -1,13 +1,15 @@
 import cryptid.CryptID;
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.PrivateKey;
+
 import cryptid.ibe.domain.SecurityLevel;
 import cryptid.ibe.exception.SetupException;
 
 import java.math.BigInteger;
 
+
 //Public wrapper class
-public class PKG {
+public class PKG{
 
     //IBE instance used for application
     private IdentityBasedEncryption ibe;

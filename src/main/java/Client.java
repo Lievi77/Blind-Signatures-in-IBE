@@ -1,9 +1,14 @@
+import cryptid.ellipticcurve.EllipticCurve;
+import cryptid.ellipticcurve.TypeOneEllipticCurve;
 import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.IdentityBasedEncryption;
+import cryptid.ibe.PrivateKeyGenerator;
 import cryptid.ibe.domain.CipherTextTuple;
 import cryptid.ibe.domain.PrivateKey;
+import cryptid.ibe.domain.PublicParameters;
 import org.bouncycastle.math.ec.ECPoint;
 
+import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.Scanner;
 
@@ -32,19 +37,19 @@ public class Client {
     }
 
     public String get_x(){
-        return user_ec_point.getXCoord().toBigInteger().toString();
+        return user_ec_point.getXCoord().toString();
     }
 
     public String get_y(){
-        return user_ec_point.getYCoord().toBigInteger().toString();
+        return user_ec_point.getYCoord().toString();
     }
 
     public String get_blinded_x(){
-        return P_prime.getXCoord().toBigInteger().toString();
+        return P_prime.getXCoord().toString();
     }
 
     public String get_blinded_y(){
-        return P_prime.getYCoord().toBigInteger().toString();
+        return P_prime.getYCoord().toString();
     }
 
     public String getEmail() {
@@ -100,9 +105,6 @@ public class Client {
 
         String EC_x = assigned_point.getXCoord().toString();
         String EC_y = assigned_point.getYCoord().toString();
-
-        //System.out.println("EC_x: " + EC_x);
-        //System.out.println("EC_y: " + EC_y);
 
         credential = new Credential(systemParameters, EC_x, EC_y, alpha_one);
         // to get h,as in the protocol , call credential.get_blinded_public_key
@@ -313,21 +315,18 @@ public class Client {
     }
 
     public PrivateKey unblind_private_key(PrivateKey pk, CA ca){
-
         BigInteger q = systemParameters.get_q();
 
-        BigInteger rx_inv = r_x.modInverse(q);
-        BigInteger ry_inv = r_y.modInverse(q);
+        BigInteger r_inv = r.modInverse(q);
 
-        AffinePoint blinded_pk_point = pk.getData();
-        BigInteger blinded_x = blinded_pk_point.getX();
-        BigInteger unblinded_x_coord =  blinded_x.multiply(rx_inv).mod(q);
+       AffinePoint pk_point = pk.getData();
 
-        BigInteger unblinded_y_coord = blinded_pk_point.getY().multiply(ry_inv);
+       TypeOneEllipticCurve ec = TypeOneEllipticCurve.ofOrder(BigInteger.valueOf(11));
+       AffinePoint test = new AffinePoint(user_ec_point.getXCoord().toBigInteger(), user_ec_point.getYCoord().toBigInteger() );
 
-        AffinePoint unblinded_point = new AffinePoint(unblinded_x_coord,unblinded_y_coord);
 
-        return new PrivateKey(unblinded_point);
+
+        return new PrivateKey(test);
     }
 
 }

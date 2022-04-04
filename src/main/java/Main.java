@@ -1,6 +1,7 @@
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.CipherTextTuple;
 import cryptid.ibe.domain.PrivateKey;
+import cryptid.ibe.domain.PublicParameters;
 
 public class Main{
     public static void main(String[] args) throws Exception{
@@ -16,6 +17,7 @@ public class Main{
         System.out.println("~~ Setup ~~");
         //Create PKG/IBE wrapper class for issuing private keys
         System.out.println("Creating PKG...");
+
         PKG pkg = new PKG();
         //Get instance of IBE in wrapper class for use in encrypting
         IdentityBasedEncryption ibe = pkg.getInstance();
@@ -38,7 +40,6 @@ public class Main{
 
         System.out.println("Bob sends an encrypted message to Alice...");
         String ec_public_key = Alice.get_x() + Alice.get_y();
-       // System.out.println("EC: " + ec_public_key);
         CipherTextTuple cipher = Bob.sendMessage(ec_public_key,ibe);
 
         //Get blinded credentials
