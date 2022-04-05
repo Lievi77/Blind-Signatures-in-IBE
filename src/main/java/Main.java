@@ -1,7 +1,6 @@
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.CipherTextTuple;
 import cryptid.ibe.domain.PrivateKey;
-import cryptid.ibe.domain.PublicParameters;
 
 public class Main{
     public static void main(String[] args) throws Exception{
@@ -37,10 +36,12 @@ public class Main{
         Client Alice = new Client("alice@gmail.com");
         System.out.println("Issuing digital credential for Alice");
         Alice.requestCredential(certificateAuthority);
+        System.out.println("~~ Setup Completed ~~\n");
 
         System.out.println("Bob sends an encrypted message to Alice...");
-        String ec_public_key = Alice.get_x() + Alice.get_y();
-        CipherTextTuple cipher = Bob.sendMessage(ec_public_key,ibe);
+        System.out.println("Bob uses Alice's point P(x,y) as the Public Key");
+        String alice_ec_public_key = Alice.get_x() + Alice.get_y();
+        CipherTextTuple cipher = Bob.sendMessage(alice_ec_public_key,ibe);
 
         //Get blinded credentials
         System.out.println("Blinding Alice's Credentials...\n");
@@ -54,11 +55,11 @@ public class Main{
         Alice.showBlindedCredentialsToPKG(pkg, blinded_cx );
         System.out.println("Showing blinded credential C_y");
         Alice.showBlindedCredentialsToPKG(pkg, blinded_cy);
-        String blinded_xy_coord = Alice.get_blinded_x() + Alice.get_blinded_y();
+        String alice_blinded_ec_public_key = Alice.get_blinded_x() + Alice.get_blinded_y();
         //after verification, pkg must compute blinded private key k'
         System.out.println("PKG issuing (blinded) private key...");
         //System.out.println(blinded_xy_coord);
-        PrivateKey blinded_pk = ibe.extract(blinded_xy_coord);
+        PrivateKey blinded_pk = ibe.extract(alice_blinded_ec_public_key);
 
 
         System.out.println("Alice unblinds private key...");
