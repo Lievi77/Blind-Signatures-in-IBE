@@ -16,8 +16,6 @@ public class CA {
 
     private SystemParameters systemParams;
     private BigInteger w_zero; // random value used in issue protocol
-    private BigInteger masterSecret;
-    private X9ECParameters x9;
     private ArrayList<AffinePoint> userPoints;
 
     private  AffinePoint ec_generator;
@@ -38,11 +36,11 @@ public class CA {
 
     public CA(PublicParameters publicParameters) {
 
+        //assert q.mod(BigInteger.valueOf(12)).equals(BigInteger.valueOf(11));
+
         this.publicParameters = publicParameters;
 
-        // Create P-224 type Elliptic Curve along with master secret and Q value (temp)
-        x9 = NISTNamedCurves.getByName("P-224");
-        ec_generator = this.publicParameters.getPointP();
+        ec_generator = publicParameters.getPointP();
         userPoints = new ArrayList<>();
 
         /*

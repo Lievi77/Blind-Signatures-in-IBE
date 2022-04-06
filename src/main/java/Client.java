@@ -1,3 +1,4 @@
+import cryptid.ellipticcurve.TypeOneEllipticCurve;
 import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.CipherTextTuple;
@@ -94,7 +95,7 @@ public class Client {
         System.out.println("-->Requesting EC point for " + email);
         AffinePoint assigned_point = admin.generate_user_point(email);
         this.user_ec_point = assigned_point;
-        r = BigInteger.valueOf(90); //for now r is fixed for testing
+        r = BigInteger.valueOf(9); //for now r is fixed for testing
         P_prime = user_ec_point.multiply(r, systemParameters.get_ec());
 
         String EC_x = assigned_point.getX().toString();
@@ -281,7 +282,6 @@ public class Client {
 
     //must be run after requestCredential
     public Credential blindCredentialY(){
-        //Double check with adams
         // random r_x in Z_q
         BigInteger q = systemParameters.get_q();
         BigInteger p = systemParameters.get_p();
@@ -310,15 +310,21 @@ public class Client {
         return new Credential(systemParameters,x.toString(),y_prime.toString(), alpha, r_y);
     }
 
-    public PrivateKey unblind_private_key(PrivateKey pk, CA ca){
-        BigInteger q = systemParameters.get_q();
+    public PrivateKey unblind_private_key(PrivateKey pk){
 
-        BigInteger r_inv = r.modInverse(q);
+        TypeOneEllipticCurve EC = systemParameters.get_ec();
 
-       AffinePoint pk_point = pk.getData();
+        //TypeOneEllipticCurve my_ec = TypeOneEllipticCurve.ofOrder(systemParameters.get_q());
 
+        System.out.println(r);
 
-        return pk;
+        BigInteger r_inv = r.modInverse(systemParameters.get_q());
+
+       AffinePoint k_prime= pk.getData();
+
+       AffinePoint k = k_prime.multiply(r_inv,EC);
+
+        return new PrivateKey(k);
     }
 
 }

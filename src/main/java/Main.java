@@ -58,15 +58,25 @@ public class Main{
         String alice_blinded_ec_public_key = Alice.get_blinded_x() + Alice.get_blinded_y();
         //after verification, pkg must compute blinded private key k'
         System.out.println("PKG issuing (blinded) private key...");
-        //System.out.println(blinded_xy_coord);
+
         PrivateKey blinded_pk = ibe.extract(alice_blinded_ec_public_key);
 
 
         System.out.println("Alice unblinds private key...");
-        PrivateKey unblinded_pk = Alice.unblind_private_key(blinded_pk, certificateAuthority);
+        PrivateKey unblinded_pk = Alice.unblind_private_key(blinded_pk);
+
+
+        //checking if unblinding
+//        PrivateKey pk = ibe.extract(alice_blinded_ec_public_key);
+//        System.out.println(pk.getData().getX());
+//        System.out.println(unblinded_pk.getData().getX());
+//        System.out.println(pk.getData().getY());
+//        System.out.println(unblinded_pk.getData().getY());
+//        assert pk.equals(unblinded_pk ): "Unblinded pk should equal pk";
 
         System.out.println("Alice now decrypts the message...");
         ibe.decrypt(unblinded_pk, cipher).ifPresent(System.out::println);
 
+        Utilities.get_generator(161);
     }
 }
