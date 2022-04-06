@@ -1,7 +1,6 @@
 import cryptid.CryptID;
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.PrivateKey;
-
 import cryptid.ibe.domain.SecurityLevel;
 import cryptid.ibe.exception.SetupException;
 
