@@ -22,7 +22,7 @@ public class Main{
         IdentityBasedEncryption ibe = pkgWrapper.getInstance();
 
         System.out.println("Creating CA...");
-        CA certificateAuthority = new CA();
+        CA certificateAuthority = new CA(ibe.getPublicParameters());
         Utilities.setSystemParameters(certificateAuthority);
 
         //Create Bob and Alice and receive their credentials

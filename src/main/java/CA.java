@@ -1,3 +1,4 @@
+import cryptid.ibe.domain.PublicParameters;
 import org.bouncycastle.asn1.nist.NISTNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.math.ec.ECPoint;
@@ -19,6 +20,9 @@ public class CA {
     private ArrayList<ECPoint> userPoints;
 
     private  ECPoint ec_generator;
+
+    private PublicParameters publicParameters;
+
     private ArrayList<BigInteger> testing = new ArrayList<>();
 
     private final BigInteger q = new BigInteger("2060482539417004714807271807532720159194878157261"); // q is 161 bits
@@ -31,7 +35,10 @@ public class CA {
     private final BigInteger y_2 = BigInteger.valueOf(1137);
     private final BigInteger x_0 = BigInteger.valueOf(80085);
 
-    public CA() {
+    public CA(PublicParameters publicParameters) {
+
+        this.publicParameters = publicParameters;
+
         // Create P-224 type Elliptic Curve along with master secret and Q value (temp)
         x9 = NISTNamedCurves.getByName("P-224");
         masterSecret = BigInteger.ONE;

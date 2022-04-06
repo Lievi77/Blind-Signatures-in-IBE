@@ -2,6 +2,7 @@ package cryptid.ibe;
 
 import cryptid.ibe.domain.CipherTextTuple;
 import cryptid.ibe.domain.PrivateKey;
+import cryptid.ibe.domain.PublicParameters;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -12,15 +13,16 @@ import java.util.Optional;
 public class IdentityBasedEncryption {
     private final IbeClient client;
     private final PrivateKeyGenerator privateKeyGenerator;
-
+    private final PublicParameters publicParameters;
     /**
      * Constructs a new instance using the specified components.
      * @param client the client that will be used for encryption and decryption
      * @param privateKeyGenerator the PKG which will provide extract capapbilities
      */
-    public IdentityBasedEncryption(final IbeClient client, final PrivateKeyGenerator privateKeyGenerator) {
+    public IdentityBasedEncryption(final IbeClient client, final PrivateKeyGenerator privateKeyGenerator, final PublicParameters publicParameters) {
         this.client = Objects.requireNonNull(client);
         this.privateKeyGenerator = Objects.requireNonNull(privateKeyGenerator);
+        this.publicParameters = Objects.requireNonNull(publicParameters);
     }
 
     /**
@@ -52,5 +54,15 @@ public class IdentityBasedEncryption {
      */
     public PrivateKey extract(final String identity) {
         return privateKeyGenerator.extract(identity);
+    }
+
+    /*
+    * Addition by Lev C. G. A.
+    *
+    *  Getter for systemParameters
+    *
+     */
+    public PublicParameters getPublicParameters(){
+        return publicParameters;
     }
 }
