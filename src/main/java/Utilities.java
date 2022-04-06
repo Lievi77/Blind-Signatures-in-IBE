@@ -84,6 +84,8 @@ public class Utilities {
 
         assert g.compareTo(BigInteger.ONE) > 0 : "G CANNOT BE ONE";
 
+        System.out.println("Generator g_0: " + g);
+
         return g;
     }
 

@@ -1,15 +1,12 @@
+import cryptid.ellipticcurve.TypeOneEllipticCurve;
 import cryptid.ellipticcurve.point.affine.AffinePoint;
+import cryptid.ellipticcurve.point.affine.generator.AffinePointGenerationStrategy;
+import cryptid.ellipticcurve.point.affine.generator.GenerationStrategyFactory;
+import cryptid.ellipticcurve.point.affine.generator.Mod3GenerationStrategy;
 import cryptid.ibe.domain.PublicParameters;
-import org.bouncycastle.asn1.nist.NISTNamedCurves;
-import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.math.ec.ECPoint;
-import org.bouncycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 
 public class CA {
@@ -18,15 +15,15 @@ public class CA {
     private BigInteger w_zero; // random value used in issue protocol
     private ArrayList<AffinePoint> userPoints;
 
-    private  AffinePoint ec_generator;
+    private  AffinePoint ec_point_generator;
 
-    private PublicParameters publicParameters;
+    private TypeOneEllipticCurve ca_ec;
 
     private ArrayList<BigInteger> testing = new ArrayList<>();
 
-    private final BigInteger q = new BigInteger("2060482539417004714807271807532720159194878157261"); // q is 161 bits
-    private final BigInteger p = new BigInteger("126722927330356485972716360228361378886490200326758635063580789329619470494803880557558327132084315144776849176169714865071209572450289026191060457204039240766393131753949708301757283139290367502337143697243329250098665250159099169322160644987891564405304100997024323402318553668671843846560769150430780325889"); //p is 1024 bits
-    private final BigInteger g_0 = new BigInteger("77892431251886878118231985443373842394949753687066869134988804136021582778525930673668862598795510663833591351729154915902687105749976049404466724780891697681133157484106077172700399828563248948202504294761256952752894303164095385771858414065268087999377076432060776344348284748617607017689393017527892943747");
+    private final BigInteger q = new BigInteger("2422930881716140125087463851781749592720970615567"); // q is 161 bits
+    private final BigInteger p = new BigInteger("149014072275063050617006962132687356898245656476538731672582737560477369669186627767727693592006813496392501220719555187269800490769036527766250049683564456154163727432206843710408310939307764474876684253939216600211453850652175504958556351749469610816314826928730921635778585221191458892027053488849484251137"); //p is 1024 bits
+    private final BigInteger g_0 = new BigInteger("91826688852231926746514962695724061705216991749939275957812079525533832690239186345974872529238111617223880177448991086091799805990347507313888863905424353224358276622305473810801445583072055323717148434522767724884753733070880381410090288307741836445271960608089443554705141690576656798921245983816603933600");
 
     // Private key values for issuing protocol
     //Can be anything as long as they're within Z_q
@@ -38,10 +35,17 @@ public class CA {
 
         //assert q.mod(BigInteger.valueOf(12)).equals(BigInteger.valueOf(11));
 
-        this.publicParameters = publicParameters;
+        this.ca_ec = TypeOneEllipticCurve.ofOrder(q);
 
-        ec_generator = publicParameters.getPointP();
+        final GenerationStrategyFactory<Mod3GenerationStrategy> generationStrategyFactory =
+                ellipticCurve -> new Mod3GenerationStrategy(ellipticCurve, Utilities.secureRandom);
+
+        AffinePointGenerationStrategy gen_strategy = generationStrategyFactory.newInstance(ca_ec);
+
+        ec_point_generator = gen_strategy.generate(100).get();
+
         userPoints = new ArrayList<>();
+
 
         /*
          * Assertions to ensure pk and pb y_i's and x_0 are within Zq
@@ -68,7 +72,7 @@ public class CA {
         BigInteger h_0 = g_0.modPow(x_0, p);
         //System.out.println("h_0: " + h_0);
 
-        this.systemParams = new SystemParameters(g_0, g_1, g_2, h_0, q, p, publicParameters.getEllipticCurve());
+        this.systemParams = new SystemParameters(g_0, g_1, g_2, h_0, q, p, this.ca_ec);
 
         return this.systemParams;
     }
@@ -87,7 +91,7 @@ public class CA {
     // Secondary verify function used for if point is not available
     public boolean verify_user_point(String identity) {
         BigInteger input = Utilities.str_to_big_int(identity);
-        AffinePoint toCompare = ec_generator.multiply(input, this.publicParameters.getEllipticCurve());
+        AffinePoint toCompare = ec_point_generator.multiply(input, ca_ec);
 
         return this.userPoints.contains(toCompare);
     }
@@ -99,7 +103,7 @@ public class CA {
         // on curve, call method to set point in array of points
         BigInteger input = Utilities.str_to_big_int(identity);
         //ECPoint point = this.ec_generator.multiply(input);
-        AffinePoint user_point = publicParameters.getPointP().multiply(input, publicParameters.getEllipticCurve());
+        AffinePoint user_point = ec_point_generator.multiply(input, ca_ec);
         set_user_point(user_point);
         return user_point;
     }

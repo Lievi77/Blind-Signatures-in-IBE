@@ -254,8 +254,9 @@ public class Client {
         // random r_x in Z_q
         BigInteger q = systemParameters.get_q();
         
-        BigInteger x = user_ec_point.getX().mod(q);
-        BigInteger x_prime = P_prime.getX().mod(q);
+        BigInteger x = user_ec_point.getX();
+        assert x.compareTo(q) < 0 : "x must be in Z_q";
+        BigInteger x_prime = P_prime.getX();
         
         //mult inverse of x
         BigInteger x_inv = x.modInverse(q);
@@ -287,8 +288,8 @@ public class Client {
         BigInteger p = systemParameters.get_p();
 
         BigInteger x = user_ec_point.getX();
-        BigInteger y = user_ec_point.getY().mod(q);
-        BigInteger y_prime = P_prime.getY().mod(q);
+        BigInteger y = user_ec_point.getY();
+        BigInteger y_prime = P_prime.getY();
 
         //mult inverse of x
         BigInteger y_inv = y.modInverse(q);

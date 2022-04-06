@@ -67,16 +67,16 @@ public class Main{
 
 
         //checking if unblinding
-//        PrivateKey pk = ibe.extract(alice_blinded_ec_public_key);
-//        System.out.println(pk.getData().getX());
-//        System.out.println(unblinded_pk.getData().getX());
-//        System.out.println(pk.getData().getY());
-//        System.out.println(unblinded_pk.getData().getY());
-//        assert pk.equals(unblinded_pk ): "Unblinded pk should equal pk";
+        PrivateKey pk = ibe.extract(alice_blinded_ec_public_key);
+        System.out.println(pk.getData().getX());
+        System.out.println(unblinded_pk.getData().getX());
+        System.out.println(pk.getData().getY());
+        System.out.println(unblinded_pk.getData().getY());
+        assert pk.equals(unblinded_pk ): "Unblinded pk should equal pk";
 
         System.out.println("Alice now decrypts the message...");
         ibe.decrypt(unblinded_pk, cipher).ifPresent(System.out::println);
 
-        Utilities.get_generator(161);
+       // Utilities.get_generator(161);
     }
 }
