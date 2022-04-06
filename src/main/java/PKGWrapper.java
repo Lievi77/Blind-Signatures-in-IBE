@@ -1,3 +1,5 @@
+
+
 import cryptid.CryptID;
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.PrivateKey;
@@ -11,11 +13,11 @@ import java.math.BigInteger;
 public class PKGWrapper {
 
     //IBE instance used for application
-    private IdentityBasedEncryption ibe;
+    private final IdentityBasedEncryption ibe;
     private BigInteger c;
 
     //Public constructor
-    public PKGWrapper() throws SetupException{
+    public PKGWrapper() throws  SetupException {
         ibe = CryptID.setupBonehFranklin(SecurityLevel.LOWEST);
     }
 
