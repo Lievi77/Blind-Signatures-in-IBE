@@ -12,8 +12,8 @@ public class Client {
     private final String email;
     private Credential credential;
     private SystemParameters systemParameters;
-    private ECPoint user_ec_point;
-    private ECPoint P_prime;
+    private AffinePoint user_ec_point;
+    private AffinePoint P_prime;
     private BigInteger r; // integer used to blind the EC point
     private BigInteger r_x; // used to blind and unblind C_x
     private BigInteger r_y; // used to blind and unblind C_y
@@ -31,19 +31,19 @@ public class Client {
     }
 
     public String get_x(){
-        return user_ec_point.getXCoord().toString();
+        return user_ec_point.getX().toString();
     }
 
     public String get_y(){
-        return user_ec_point.getYCoord().toString();
+        return user_ec_point.getY().toString();
     }
 
     public String get_blinded_x(){
-        return P_prime.getXCoord().toString();
+        return P_prime.getX().toString();
     }
 
     public String get_blinded_y(){
-        return P_prime.getYCoord().toString();
+        return P_prime.getY().toString();
     }
 
     public String getEmail() {
@@ -91,14 +91,16 @@ public class Client {
         // create credential
         // here in the credential, we put as x_1, x_2 the coordinates
         // of the EC
-        //System.out.println("-->Requesting EC point for " + email);
-        ECPoint assigned_point = admin.generate_user_point(email);
+        System.out.println("-->Requesting EC point for " + email);
+        AffinePoint assigned_point = admin.generate_user_point(email);
         this.user_ec_point = assigned_point;
         r = BigInteger.valueOf(90); //for now r is fixed for testing
-        P_prime = user_ec_point.multiply(r);
+        P_prime = user_ec_point.multiply(r, systemParameters.get_ec());
 
-        String EC_x = assigned_point.getXCoord().toString();
-        String EC_y = assigned_point.getYCoord().toString();
+        String EC_x = assigned_point.getX().toString();
+        String EC_y = assigned_point.getY().toString();
+
+        System.out.println("-->Assigned EC point :(" +EC_x +", " + EC_y+")" );
 
         credential = new Credential(systemParameters, EC_x, EC_y, alpha_one);
         // to get h,as in the protocol , call credential.get_blinded_public_key
@@ -251,8 +253,8 @@ public class Client {
         // random r_x in Z_q
         BigInteger q = systemParameters.get_q();
         
-        BigInteger x = user_ec_point.getXCoord().toBigInteger().mod(q);
-        BigInteger x_prime = P_prime.getXCoord().toBigInteger().mod(q);
+        BigInteger x = user_ec_point.getX().mod(q);
+        BigInteger x_prime = P_prime.getX().mod(q);
         
         //mult inverse of x
         BigInteger x_inv = x.modInverse(q);
@@ -266,7 +268,7 @@ public class Client {
         BigInteger g_2 = systemParameters.get_g_2();
         BigInteger h_0 = systemParameters.get_h_0();
         BigInteger p = systemParameters.get_p();
-        BigInteger y = user_ec_point.getYCoord().toBigInteger();
+        BigInteger y = user_ec_point.getY();
 
         BigInteger g_1_pow_x_prime = g_1.modPow(x_prime,p);
         BigInteger g_2_pow_r_x_y = g_2.modPow(r_x.multiply(y), p );
@@ -284,9 +286,9 @@ public class Client {
         BigInteger q = systemParameters.get_q();
         BigInteger p = systemParameters.get_p();
 
-        BigInteger x = user_ec_point.getXCoord().toBigInteger();
-        BigInteger y = user_ec_point.getYCoord().toBigInteger().mod(q);
-        BigInteger y_prime = P_prime.getYCoord().toBigInteger().mod(q);
+        BigInteger x = user_ec_point.getX();
+        BigInteger y = user_ec_point.getY().mod(q);
+        BigInteger y_prime = P_prime.getY().mod(q);
 
         //mult inverse of x
         BigInteger y_inv = y.modInverse(q);

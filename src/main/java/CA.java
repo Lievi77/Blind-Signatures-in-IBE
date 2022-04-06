@@ -1,3 +1,4 @@
+import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.domain.PublicParameters;
 import org.bouncycastle.asn1.nist.NISTNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
@@ -17,9 +18,9 @@ public class CA {
     private BigInteger w_zero; // random value used in issue protocol
     private BigInteger masterSecret;
     private X9ECParameters x9;
-    private ArrayList<ECPoint> userPoints;
+    private ArrayList<AffinePoint> userPoints;
 
-    private  ECPoint ec_generator;
+    private  AffinePoint ec_generator;
 
     private PublicParameters publicParameters;
 
@@ -41,8 +42,7 @@ public class CA {
 
         // Create P-224 type Elliptic Curve along with master secret and Q value (temp)
         x9 = NISTNamedCurves.getByName("P-224");
-        masterSecret = BigInteger.ONE;
-        ec_generator = this.x9.getG();
+        ec_generator = this.publicParameters.getPointP();
         userPoints = new ArrayList<>();
 
         /*
@@ -70,13 +70,13 @@ public class CA {
         BigInteger h_0 = g_0.modPow(x_0, p);
         //System.out.println("h_0: " + h_0);
 
-        this.systemParams = new SystemParameters(g_0, g_1, g_2, h_0, q, p);
+        this.systemParams = new SystemParameters(g_0, g_1, g_2, h_0, q, p, publicParameters.getEllipticCurve());
 
         return this.systemParams;
     }
 
     // Set user point via point passed
-    public void set_user_point(ECPoint userPoint) {
+    public void set_user_point(AffinePoint userPoint) {
         userPoints.add(userPoint);
     }
 
@@ -89,20 +89,21 @@ public class CA {
     // Secondary verify function used for if point is not available
     public boolean verify_user_point(String identity) {
         BigInteger input = Utilities.str_to_big_int(identity);
-        ECPoint toCompare = ec_generator.multiply(input);
+        AffinePoint toCompare = ec_generator.multiply(input, this.publicParameters.getEllipticCurve());
 
         return this.userPoints.contains(toCompare);
     }
 
     // Public function used to generate a point on the EC for a given identity
-    public ECPoint generate_user_point(String identity){
+    public AffinePoint generate_user_point(String identity){
 
         // Convert identity to hexadecimal hash and use as BigInteger to generate point
         // on curve, call method to set point in array of points
         BigInteger input = Utilities.str_to_big_int(identity);
-        ECPoint point = this.ec_generator.multiply(input);
-        set_user_point(point);
-        return point;
+        //ECPoint point = this.ec_generator.multiply(input);
+        AffinePoint user_point = publicParameters.getPointP().multiply(input, publicParameters.getEllipticCurve());
+        set_user_point(user_point);
+        return user_point;
     }
 
     public BigInteger generate_a_zero() {
