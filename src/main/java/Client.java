@@ -1,14 +1,8 @@
-import cryptid.ellipticcurve.EllipticCurve;
-import cryptid.ellipticcurve.TypeOneEllipticCurve;
 import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.IdentityBasedEncryption;
-import cryptid.ibe.PrivateKeyGenerator;
 import cryptid.ibe.domain.CipherTextTuple;
 import cryptid.ibe.domain.PrivateKey;
-import cryptid.ibe.domain.PublicParameters;
 import org.bouncycastle.math.ec.ECPoint;
-
-import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.Scanner;
 
@@ -206,7 +200,7 @@ public class Client {
 
     // Show protocol
     // i.e, proof of knowledge
-    public void showBlindedCredentialsToPKG(PKG pkg, Credential credential_to_show) {
+    public void showBlindedCredentialsToPKG(PKGWrapper pkgWrapper, Credential credential_to_show) {
 
         // get everything from system parameters
         BigInteger q = this.systemParameters.get_q();
@@ -236,14 +230,14 @@ public class Client {
 
         BigInteger a = g_1_pow_w_1.multiply(g_2_pow_w_2).multiply(h_0_pow_w_3).mod(p);
 
-        BigInteger c = pkg.get_show_protocol_c();
+        BigInteger c = pkgWrapper.get_show_protocol_c();
 
         // create r's
         BigInteger r_1 = c.multiply(x_1).add(w_1).mod(q);
         BigInteger r_2 = c.multiply(x_2).add(w_2).mod(q);
         BigInteger r_3 = c.multiply(alpha).add(w_3).mod(q);
 
-        pkg.verify_credential_signature(credential_to_show, a, r_1, r_2, r_3);
+        pkgWrapper.verify_credential_signature(credential_to_show, a, r_1, r_2, r_3);
     }
 
     public CipherTextTuple sendMessage(String receiver_public_key, IdentityBasedEncryption ibe){
@@ -321,12 +315,8 @@ public class Client {
 
        AffinePoint pk_point = pk.getData();
 
-       TypeOneEllipticCurve ec = TypeOneEllipticCurve.ofOrder(BigInteger.valueOf(11));
-       AffinePoint test = new AffinePoint(user_ec_point.getXCoord().toBigInteger(), user_ec_point.getYCoord().toBigInteger() );
 
-
-
-        return new PrivateKey(test);
+        return pk;
     }
 
 }

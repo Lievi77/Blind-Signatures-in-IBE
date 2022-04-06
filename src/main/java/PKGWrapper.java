@@ -9,14 +9,14 @@ import java.math.BigInteger;
 
 
 //Public wrapper class
-public class PKG{
+public class PKGWrapper {
 
     //IBE instance used for application
     private IdentityBasedEncryption ibe;
     private BigInteger c;
 
     //Public constructor
-    public PKG() throws SetupException{
+    public PKGWrapper() throws SetupException{
         ibe = CryptID.setupBonehFranklin(SecurityLevel.LOWEST);
     }
 

@@ -17,9 +17,9 @@ public class Main{
         //Create PKG/IBE wrapper class for issuing private keys
         System.out.println("Creating PKG...");
 
-        PKG pkg = new PKG();
+        PKGWrapper pkgWrapper = new PKGWrapper();
         //Get instance of IBE in wrapper class for use in encrypting
-        IdentityBasedEncryption ibe = pkg.getInstance();
+        IdentityBasedEncryption ibe = pkgWrapper.getInstance();
 
         System.out.println("Creating CA...");
         CA certificateAuthority = new CA();
@@ -52,9 +52,9 @@ public class Main{
 
         //show and verify credentials
         System.out.println("Showing blinded credential C_x");
-        Alice.showBlindedCredentialsToPKG(pkg, blinded_cx );
+        Alice.showBlindedCredentialsToPKG(pkgWrapper, blinded_cx );
         System.out.println("Showing blinded credential C_y");
-        Alice.showBlindedCredentialsToPKG(pkg, blinded_cy);
+        Alice.showBlindedCredentialsToPKG(pkgWrapper, blinded_cy);
         String alice_blinded_ec_public_key = Alice.get_blinded_x() + Alice.get_blinded_y();
         //after verification, pkg must compute blinded private key k'
         System.out.println("PKG issuing (blinded) private key...");
