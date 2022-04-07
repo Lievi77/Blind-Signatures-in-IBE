@@ -21,12 +21,6 @@ public class Client {
     private BigInteger r_y; // used to blind and unblind C_y
     private BigInteger alpha; //blinding factor
 
-    // Blinded credentials
-    private BigInteger blinded_cx;
-    private BigInteger blinded_cy;
-
-
-
     public Client(String email) {
         this.email = email;
         this.inputScanner = new Scanner(System.in);
@@ -103,19 +97,13 @@ public class Client {
         this.user_ec_point = assigned_point;
 
         //TODO: FIND OUT WHAT IS WRONG
-        r = BigInteger.valueOf(1); //for now r is fixed for testing
-
+        r = BigInteger.valueOf(2); //for now r is fixed for testing
+        r_inv = r.modInverse(systemParameters.get_q_e());
         TypeOneEllipticCurve EC = systemParameters.get_ec();
 
         user_ec_point_prime = user_ec_point.multiply(r, EC);
 
-        r_inv = r.modInverse(EC.getFieldOrder());
-
-        System.out.println(user_ec_point);
-        System.out.println(user_ec_point_prime.multiply(r_inv,EC));
-        System.out.println(EC.isOnCurve(user_ec_point_prime.multiply(r_inv,EC)) ) ;
-
-        assert user_ec_point_prime.multiply(r_inv,EC).equals(user_ec_point) : "Inversing must be true";
+       assert user_ec_point_prime.multiply(r_inv,EC).equals(user_ec_point) : "Inversing must be true";
 
         credential = new Credential(systemParameters, EC_x, EC_y, alpha_one);
         // to get h,as in the protocol , call credential.get_blinded_public_key
@@ -288,7 +276,7 @@ public class Client {
         BigInteger g_2_pow_r_x_y = g_2.modPow(r_x.multiply(y), p );
         BigInteger h_0_pow_r_x_alpha = h_0.modPow(r_x.multiply(alpha),p);
 
-        this.blinded_cx = g_1_pow_x_prime.multiply(g_2_pow_r_x_y).multiply(h_0_pow_r_x_alpha).mod(q);
+            BigInteger blinded_cx = g_1_pow_x_prime.multiply(g_2_pow_r_x_y).multiply(h_0_pow_r_x_alpha).mod(q);
 
         return new Credential(systemParameters,x_prime.toString(),y.toString(), alpha, r_x);
     }
@@ -318,7 +306,7 @@ public class Client {
         BigInteger g2_pow_y_prime = g_2.modPow(y_prime,p);
         BigInteger h0_pow_r_y = h_0.modPow(r_y.multiply(alpha),p);
 
-        this.blinded_cy = (g1_pow_r_y_x.multiply(g2_pow_y_prime).multiply(h0_pow_r_y)).mod(q);
+        BigInteger blinded_cy = (g1_pow_r_y_x.multiply(g2_pow_y_prime).multiply(h0_pow_r_y)).mod(q);
 
         return new Credential(systemParameters,x.toString(),y_prime.toString(), alpha, r_y);
     }
@@ -327,9 +315,9 @@ public class Client {
 
         TypeOneEllipticCurve EC = systemParameters.get_ec();
 
-       AffinePoint k_prime= pk.getData();
+        AffinePoint k_prime= pk.getData();
 
-       AffinePoint k = k_prime.multiply(r_inv,EC);
+        AffinePoint k = k_prime.multiply(r_inv,EC);
 
         return new PrivateKey(k);
     }

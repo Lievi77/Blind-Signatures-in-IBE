@@ -79,7 +79,7 @@ public class CA {
         BigInteger h_0 = g_0.modPow(x_0, p);
         //System.out.println("h_0: " + h_0);
 
-        this.systemParams = new SystemParameters(g_0, g_1, g_2, h_0, q, p, publicParameters.getEllipticCurve() );
+        this.systemParams = new SystemParameters(g_0, g_1, g_2, h_0, q, p, publicParameters.getEllipticCurve(), publicParameters.getQ() );
 
         return this.systemParams;
     }

@@ -29,6 +29,7 @@ final class BonehFranklinPrivateKeyGeneratorImpl extends PrivateKeyGenerator {
         Objects.requireNonNull(identity);
 
         //Let Q_id = HashToPoint(E, p, q, id, hashfcn)
+
         final AffinePoint qId = hashToPoint(publicParameters.getEllipticCurve(),
                 publicParameters.getEllipticCurve().getFieldOrder(), publicParameters.getQ(), identity, messageDigestFactory.obtainInstance());
 

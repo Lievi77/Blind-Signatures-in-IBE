@@ -1,5 +1,6 @@
 package cryptid.ibe;
 
+import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.domain.PrivateKey;
 import cryptid.ibe.domain.PublicParameters;
 
