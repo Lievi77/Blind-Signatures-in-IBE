@@ -160,10 +160,6 @@ public class CA {
             p = p.add(BigInteger.ONE);
         } while (!p.isProbablePrime(100) || p.bitLength() < 1024);
 
-
-        System.out.println(q.bitLength() + " Prime q: " + q);
-        System.out.println(p.bitLength() + " Prime p: " + p);
-
         assert q.isProbablePrime(100) : "must be a prime";
         assert q.mod(TWELVE).equals(ELEVEN) : "Must be congruent 11 modulo 12";
         assert p.isProbablePrime(100) : "must be prime";
@@ -179,8 +175,6 @@ public class CA {
         BigInteger g = h.modPow(exp, p);
 
         assert g.compareTo(BigInteger.ONE) > 0 : "G CANNOT BE ONE";
-
-        System.out.println("Generator g_0: " + g);
 
         return g;
     }

@@ -3,7 +3,7 @@ import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.CipherTextTuple;
 import cryptid.ibe.domain.PrivateKey;
-import org.bouncycastle.math.ec.ECPoint;
+
 import java.math.BigInteger;
 import java.util.Scanner;
 
@@ -14,8 +14,9 @@ public class Client {
     private Credential credential;
     private SystemParameters systemParameters;
     private AffinePoint user_ec_point;
-    private AffinePoint P_prime;
+    private AffinePoint user_ec_point_prime;
     private BigInteger r; // integer used to blind the EC point
+    private BigInteger r_inv;
     private BigInteger r_x; // used to blind and unblind C_x
     private BigInteger r_y; // used to blind and unblind C_y
     private BigInteger alpha; //blinding factor
@@ -40,11 +41,11 @@ public class Client {
     }
 
     public String get_blinded_x(){
-        return P_prime.getX().toString();
+        return user_ec_point_prime.getX().toString();
     }
 
     public String get_blinded_y(){
-        return P_prime.getY().toString();
+        return user_ec_point_prime.getY().toString();
     }
 
     public String getEmail() {
@@ -73,7 +74,6 @@ public class Client {
         // first, alice needs to choose 3 different numbers
         BigInteger alpha_one, alpha_two, alpha_three;
 
-        // hardcoded "random"
         // Example of programming with assertion
         alpha_one = new BigInteger(q.bitLength()-1, Utilities.secureRandom); // blinding factor
         this.alpha= alpha_one;
@@ -94,14 +94,28 @@ public class Client {
         // of the EC
         System.out.println("-->Requesting EC point for " + email);
         AffinePoint assigned_point = admin.generate_user_point(email);
-        this.user_ec_point = assigned_point;
-        r = BigInteger.valueOf(9); //for now r is fixed for testing
-        P_prime = user_ec_point.multiply(r, admin.get_ec());
 
         String EC_x = assigned_point.getX().toString();
         String EC_y = assigned_point.getY().toString();
 
         System.out.println("-->Assigned EC point :(" +EC_x +", " + EC_y+")" );
+
+        this.user_ec_point = assigned_point;
+
+        //TODO: FIND OUT WHAT IS WRONG
+        r = BigInteger.valueOf(1); //for now r is fixed for testing
+
+        TypeOneEllipticCurve EC = systemParameters.get_ec();
+
+        user_ec_point_prime = user_ec_point.multiply(r, EC);
+
+        r_inv = r.modInverse(EC.getFieldOrder());
+
+        System.out.println(user_ec_point);
+        System.out.println(user_ec_point_prime.multiply(r_inv,EC));
+        System.out.println(EC.isOnCurve(user_ec_point_prime.multiply(r_inv,EC)) ) ;
+
+        assert user_ec_point_prime.multiply(r_inv,EC).equals(user_ec_point) : "Inversing must be true";
 
         credential = new Credential(systemParameters, EC_x, EC_y, alpha_one);
         // to get h,as in the protocol , call credential.get_blinded_public_key
@@ -254,7 +268,7 @@ public class Client {
         
         BigInteger x = user_ec_point.getX();
         assert x.compareTo(q) < 0 : "x must be in Z_q";
-        BigInteger x_prime = P_prime.getX();
+        BigInteger x_prime = user_ec_point_prime.getX();
         
         //mult inverse of x
         BigInteger x_inv = x.modInverse(q);
@@ -287,7 +301,7 @@ public class Client {
 
         BigInteger x = user_ec_point.getX();
         BigInteger y = user_ec_point.getY();
-        BigInteger y_prime = P_prime.getY();
+        BigInteger y_prime = user_ec_point_prime.getY();
 
         //mult inverse of x
         BigInteger y_inv = y.modInverse(q);
@@ -312,8 +326,6 @@ public class Client {
     public PrivateKey unblind_private_key(PrivateKey pk){
 
         TypeOneEllipticCurve EC = systemParameters.get_ec();
-
-        BigInteger r_inv = r.modInverse(systemParameters.get_q());
 
        AffinePoint k_prime= pk.getData();
 

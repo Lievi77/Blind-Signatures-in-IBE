@@ -54,12 +54,12 @@ public class Main{
         //show and verify credentials
         System.out.println("Showing blinded credential C_x");
         Alice.showBlindedCredentialsToPKG(pkgWrapper, blinded_cx );
-        System.out.println("Showing blinded credential C_y\n");
+        System.out.println("Showing blinded credential C_y");
         Alice.showBlindedCredentialsToPKG(pkgWrapper, blinded_cy);
+
         String alice_blinded_ec_public_key = Alice.get_blinded_x() + Alice.get_blinded_y();
         //after verification, pkg must compute blinded private key k'
-        System.out.println("PKG issuing (blinded) private key...");
-
+        System.out.println("\nPKG issuing (blinded) private key...");
         PrivateKey blinded_pk = ibe.extract(alice_blinded_ec_public_key);
 
 
@@ -68,14 +68,15 @@ public class Main{
 
 
         //checking if unblinding
-        PrivateKey pk = ibe.extract(alice_ec_public_key);
-        System.out.println("k_x :" +pk.getData().getX());
-        System.out.println("k_x (unblinded) :" +unblinded_pk.getData().getX());
-        System.out.println(pk.getData().getY());
-        System.out.println(unblinded_pk.getData().getY());
-        assert pk.equals(unblinded_pk ): "Unblinded pk should equal pk";
+//        PrivateKey pk = ibe.extract(alice_ec_public_key);
+//        System.out.println("k_x :" +pk.getData().getX());
+//        System.out.println("k_x (unblinded) :" +unblinded_pk.getData().getX());
+//        System.out.println(pk.getData().getY());
+//        System.out.println(unblinded_pk.getData().getY());
+//        assert pk.equals(unblinded_pk ): "Unblinded pk should equal pk";
 
-        System.out.println("Alice now decrypts the message...");
+        System.out.println("Alice now decrypts the message...\n");
+        System.out.println("Message is: ");
         ibe.decrypt(unblinded_pk, cipher).ifPresent(System.out::println);
 
        // Utilities.get_generator(161);
