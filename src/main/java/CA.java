@@ -7,9 +7,15 @@ import cryptid.ibe.domain.PublicParameters;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 
 public class CA {
+    private static BigInteger ZERO = BigInteger.ZERO;
+    private static BigInteger ONE = BigInteger.ONE;
+    private static BigInteger ELEVEN = BigInteger.valueOf(11);
+    private static BigInteger TWELVE = BigInteger.valueOf(12);
+
 
     private SystemParameters systemParams;
     private BigInteger w_zero; // random value used in issue protocol
@@ -19,11 +25,13 @@ public class CA {
 
     private TypeOneEllipticCurve ca_ec;
 
+    private PublicParameters publicParameters;
+
     private ArrayList<BigInteger> testing = new ArrayList<>();
 
-    private final BigInteger q = new BigInteger("2422930881716140125087463851781749592720970615567"); // q is 161 bits
-    private final BigInteger p = new BigInteger("149014072275063050617006962132687356898245656476538731672582737560477369669186627767727693592006813496392501220719555187269800490769036527766250049683564456154163727432206843710408310939307764474876684253939216600211453850652175504958556351749469610816314826928730921635778585221191458892027053488849484251137"); //p is 1024 bits
-    private final BigInteger g_0 = new BigInteger("91826688852231926746514962695724061705216991749939275957812079525533832690239186345974872529238111617223880177448991086091799805990347507313888863905424353224358276622305473810801445583072055323717148434522767724884753733070880381410090288307741836445271960608089443554705141690576656798921245983816603933600");
+    private final  BigInteger q ; // q is 161 bits
+    private  BigInteger p; //p is 1024 bits
+    private final BigInteger g_0;
 
     // Private key values for issuing protocol
     //Can be anything as long as they're within Z_q
@@ -31,22 +39,21 @@ public class CA {
     private final BigInteger y_2 = BigInteger.valueOf(1137);
     private final BigInteger x_0 = BigInteger.valueOf(80085);
 
+
+
     public CA(PublicParameters publicParameters) {
+        //set up p,q,g_0
+        q = publicParameters.getEllipticCurve().getFieldOrder();
+        g_0 = get_generator();
 
-        //assert q.mod(BigInteger.valueOf(12)).equals(BigInteger.valueOf(11));
+        this.ca_ec = publicParameters.getEllipticCurve();
 
-        this.ca_ec = TypeOneEllipticCurve.ofOrder(q);
+        this.publicParameters = publicParameters;
 
-        final GenerationStrategyFactory<Mod3GenerationStrategy> generationStrategyFactory =
-                ellipticCurve -> new Mod3GenerationStrategy(ellipticCurve, Utilities.secureRandom);
-
-        AffinePointGenerationStrategy gen_strategy = generationStrategyFactory.newInstance(ca_ec);
-
-        ec_point_generator = gen_strategy.generate(100).get();
+        //ec_point_generator = gen_strategy.generate(100).get();
+        ec_point_generator = publicParameters.getPointP();
 
         userPoints = new ArrayList<>();
-
-
         /*
          * Assertions to ensure pk and pb y_i's and x_0 are within Zq
          */
@@ -72,7 +79,7 @@ public class CA {
         BigInteger h_0 = g_0.modPow(x_0, p);
         //System.out.println("h_0: " + h_0);
 
-        this.systemParams = new SystemParameters(g_0, g_1, g_2, h_0, q, p, this.ca_ec);
+        this.systemParams = new SystemParameters(g_0, g_1, g_2, h_0, q, p, publicParameters.getEllipticCurve() );
 
         return this.systemParams;
     }
@@ -137,5 +144,44 @@ public class CA {
 
         // can also express a division as a multiplication
         return nominator.multiply(denominator).mod(q);
+    }
+
+    public TypeOneEllipticCurve get_ec(){
+        return this.ca_ec;
+    }
+
+    public BigInteger get_generator() {
+
+        BigInteger r;
+
+        do {
+            r  = new BigInteger( 1024 - q.bitLength(), Utilities.secureRandom);
+            p = q.multiply(r); // get 1024 bit p (1024 - number_of_bits)
+            p = p.add(BigInteger.ONE);
+        } while (!p.isProbablePrime(100) || p.bitLength() < 1024);
+
+
+        System.out.println(q.bitLength() + " Prime q: " + q);
+        System.out.println(p.bitLength() + " Prime p: " + p);
+
+        assert q.isProbablePrime(100) : "must be a prime";
+        assert q.mod(TWELVE).equals(ELEVEN) : "Must be congruent 11 modulo 12";
+        assert p.isProbablePrime(100) : "must be prime";
+        assert p.subtract(ONE).mod(q).equals(ZERO): "p-1 must be divisible by q"; // ensures p-1 is divisible by p
+        assert p.bitLength() == 1024;
+
+        BigInteger h = new BigInteger(160, new SecureRandom());
+
+        assert h.compareTo(BigInteger.ONE) > 0 : "H has to be greater than 1";
+
+        BigInteger exp = p.subtract(BigInteger.ONE).divide(q);
+
+        BigInteger g = h.modPow(exp, p);
+
+        assert g.compareTo(BigInteger.ONE) > 0 : "G CANNOT BE ONE";
+
+        System.out.println("Generator g_0: " + g);
+
+        return g;
     }
 }

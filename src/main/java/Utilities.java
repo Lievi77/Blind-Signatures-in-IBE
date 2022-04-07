@@ -12,8 +12,7 @@ public class Utilities {
 
     public static SystemParameters systemParameters;
 
-    private static BigInteger ELEVEN = BigInteger.valueOf(11);
-    private static BigInteger TWELVE = BigInteger.valueOf(12);
+
 
     public static BigInteger str_to_big_int(String s){
         //Every single SHA-1 output will be in Z_q (q is 161 bits)
@@ -50,43 +49,6 @@ public class Utilities {
 
     public static void setSystemParameters(CA ca){
         Utilities.systemParameters = ca.get_system_parameters();
-    }
-
-    public static BigInteger get_generator(int number_of_bits) {
-        BigInteger q;
-        BigInteger p;
-
-        do {
-            q = BigInteger.probablePrime(number_of_bits, new SecureRandom()); //
-
-            p = q.multiply(BigInteger.TWO.pow(1024 - number_of_bits)); // get 1024 bit p (1024 - number_of_bits)
-
-            p = p.add(BigInteger.ONE);
-
-        } while (!p.isProbablePrime(10) || !q.mod(TWELVE).equals(ELEVEN) );
-
-        System.out.println(q.bitLength() + " Prime q: " + q);
-        System.out.println(p.bitLength() + " Prime p: " + p);
-
-        assert q.isProbablePrime(100) : "must be a prime";
-        assert q.mod(TWELVE).equals(ELEVEN) : "Must be congruent 11 modulo 12";
-        assert p.isProbablePrime(100) : "must be prime";
-        assert p.subtract(BigInteger.ONE).mod(q).equals(BigInteger.ZERO); // ensures p-1 is divisible by q
-        assert p.bitLength() == 1024;
-
-        BigInteger h = new BigInteger(160, new SecureRandom());
-
-        assert h.compareTo(BigInteger.ONE) > 0 : "H has to be greater than 1";
-
-        BigInteger exp = p.subtract(BigInteger.ONE).divide(q);
-
-        BigInteger g = h.modPow(exp, p);
-
-        assert g.compareTo(BigInteger.ONE) > 0 : "G CANNOT BE ONE";
-
-        System.out.println("Generator g_0: " + g);
-
-        return g;
     }
 
 }

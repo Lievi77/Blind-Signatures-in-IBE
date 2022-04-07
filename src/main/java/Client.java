@@ -96,7 +96,7 @@ public class Client {
         AffinePoint assigned_point = admin.generate_user_point(email);
         this.user_ec_point = assigned_point;
         r = BigInteger.valueOf(9); //for now r is fixed for testing
-        P_prime = user_ec_point.multiply(r, systemParameters.get_ec());
+        P_prime = user_ec_point.multiply(r, admin.get_ec());
 
         String EC_x = assigned_point.getX().toString();
         String EC_y = assigned_point.getY().toString();
@@ -243,9 +243,7 @@ public class Client {
         pkgWrapper.verify_credential_signature(credential_to_show, a, r_1, r_2, r_3);
     }
 
-    public CipherTextTuple sendMessage(String receiver_public_key, IdentityBasedEncryption ibe){
-        String message = "Makima is the control devil";
-
+    public CipherTextTuple sendMessage(String receiver_public_key, IdentityBasedEncryption ibe, String message){
         return ibe.encrypt(message,receiver_public_key);
     }
 
@@ -314,10 +312,6 @@ public class Client {
     public PrivateKey unblind_private_key(PrivateKey pk){
 
         TypeOneEllipticCurve EC = systemParameters.get_ec();
-
-        //TypeOneEllipticCurve my_ec = TypeOneEllipticCurve.ofOrder(systemParameters.get_q());
-
-        System.out.println(r);
 
         BigInteger r_inv = r.modInverse(systemParameters.get_q());
 

@@ -41,7 +41,8 @@ public class Main{
         System.out.println("Bob sends an encrypted message to Alice...");
         System.out.println("Bob uses Alice's point P(x,y) as the Public Key");
         String alice_ec_public_key = Alice.get_x() + Alice.get_y();
-        CipherTextTuple cipher = Bob.sendMessage(alice_ec_public_key,ibe);
+        String message = "Honors Project 2022";
+        CipherTextTuple cipher = Bob.sendMessage(alice_ec_public_key,ibe, message);
 
         //Get blinded credentials
         System.out.println("Blinding Alice's Credentials...\n");
@@ -53,7 +54,7 @@ public class Main{
         //show and verify credentials
         System.out.println("Showing blinded credential C_x");
         Alice.showBlindedCredentialsToPKG(pkgWrapper, blinded_cx );
-        System.out.println("Showing blinded credential C_y");
+        System.out.println("Showing blinded credential C_y\n");
         Alice.showBlindedCredentialsToPKG(pkgWrapper, blinded_cy);
         String alice_blinded_ec_public_key = Alice.get_blinded_x() + Alice.get_blinded_y();
         //after verification, pkg must compute blinded private key k'
@@ -67,9 +68,9 @@ public class Main{
 
 
         //checking if unblinding
-        PrivateKey pk = ibe.extract(alice_blinded_ec_public_key);
-        System.out.println(pk.getData().getX());
-        System.out.println(unblinded_pk.getData().getX());
+        PrivateKey pk = ibe.extract(alice_ec_public_key);
+        System.out.println("k_x :" +pk.getData().getX());
+        System.out.println("k_x (unblinded) :" +unblinded_pk.getData().getX());
         System.out.println(pk.getData().getY());
         System.out.println(unblinded_pk.getData().getY());
         assert pk.equals(unblinded_pk ): "Unblinded pk should equal pk";
