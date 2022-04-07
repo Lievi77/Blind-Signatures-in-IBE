@@ -44,7 +44,7 @@ final class BonehFranklinIbeClientImpl extends IbeClient {
     }
 
     @Override
-    public CipherTextTuple encrypt(final String message, final String identity) {
+    public CipherTextTuple encrypt(final String message, final AffinePoint identity) {
         checkEncryptArguments(message, identity);
 
         byte[] messageBytes = message.getBytes();
@@ -55,8 +55,8 @@ final class BonehFranklinIbeClientImpl extends IbeClient {
 
         // Q_id = HashToPoint(E, p, q, id, hashfcn), using Algorithm 4.4.1 (HashToPoint), which results in a point of
         // order q in E(F_p).
-        AffinePoint pointQId = HashUtils.hashToPoint(publicParameters.getEllipticCurve(),
-                publicParameters.getEllipticCurve().getFieldOrder(), publicParameters.getQ(), identity, messageDigest);
+//        AffinePoint pointQId = HashUtils.hashToPoint(publicParameters.getEllipticCurve(),
+//                publicParameters.getEllipticCurve().getFieldOrder(), publicParameters.getQ(), identity, messageDigest);
 
         // Select a random hashlen-bit vector rho, represented as (hashlen / 8)-octet string in big-endian convention
         // I think the comment above is wrong.
@@ -79,7 +79,7 @@ final class BonehFranklinIbeClientImpl extends IbeClient {
 
         // Let theta = Pairing(E, p, q, P_pub, Q_id), which is an element of the extension field F_p^2 obtained using
         // the modified Tate pairing of Algorithm 4.5.1 (Pairing).
-        Complex theta = tatePairing.performPairing(publicParameters.getPointPpublic(), pointQId);
+        Complex theta = tatePairing.performPairing(publicParameters.getPointPpublic(),identity);
 
         // Let theta' = theta^l, which is theta raised to the power of l in F_p^2
         Complex thetaPrime = theta.modPow(l, publicParameters.getEllipticCurve().getFieldOrder());
@@ -164,7 +164,7 @@ final class BonehFranklinIbeClientImpl extends IbeClient {
         return Optional.empty();
     }
 
-    private void checkEncryptArguments(final String message, final String identity) {
+    private void checkEncryptArguments(final String message, final AffinePoint identity) {
         Objects.requireNonNull(message);
         Objects.requireNonNull(identity);
 
@@ -172,9 +172,9 @@ final class BonehFranklinIbeClientImpl extends IbeClient {
             throw new IllegalArgumentException("The message must not be empty!");
         }
 
-        if (identity.equals(EMPTY_STRING)) {
-            throw new IllegalArgumentException("The identity must not be empty!");
-        }
+//        if (identity.equals(EMPTY_STRING)) {
+//            throw new IllegalArgumentException("The identity must not be empty!");
+//        }
     }
 
     private void checkDecryptArguments(final PrivateKey privateKey, final CipherTextTuple ciphertext) {

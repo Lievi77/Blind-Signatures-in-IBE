@@ -26,6 +26,14 @@ public class Client {
         this.inputScanner = new Scanner(System.in);
     }
 
+    public AffinePoint get_user_point(){
+        return user_ec_point;
+    }
+
+    public AffinePoint get_user_blinded_point(){
+        return user_ec_point_prime;
+    }
+
     public String get_x(){
         return user_ec_point.getX().toString();
     }
@@ -96,8 +104,9 @@ public class Client {
 
         this.user_ec_point = assigned_point;
 
-        //TODO: FIND OUT WHAT IS WRONG
-        r = BigInteger.valueOf(2); //for now r is fixed for testing
+
+        // r has to be in Z_{q_e}
+        r = new BigInteger(systemParameters.get_q_e().bitLength()-1, Utilities.secureRandom); //for now r is fixed for testing
         r_inv = r.modInverse(systemParameters.get_q_e());
         TypeOneEllipticCurve EC = systemParameters.get_ec();
 
@@ -180,29 +189,6 @@ public class Client {
         return hex_hashed_as_big_int;
     }
 
-    public CipherTextTuple encryptMessage(IdentityBasedEncryption ibe) {
-        String plaintext = getPlainText();
-        String publicKey = getPublicKey();
-
-        CipherTextTuple cipherText = ibe.encrypt(plaintext, publicKey);
-
-        return cipherText;
-    }
-
-    public String getPlainText() {
-        System.out.println("Input plaintext to be encrypted below:");
-        String plaintext = inputScanner.nextLine();
-
-        return plaintext;
-    }
-
-    public String getPublicKey() {
-        System.out.println("Input the user's public key for encryption below: ");
-        String publicKey = inputScanner.nextLine();
-
-        return publicKey;
-    }
-
     // Show protocol
     // i.e, proof of knowledge
     public void showBlindedCredentialsToPKG(PKGWrapper pkgWrapper, Credential credential_to_show) {
@@ -245,7 +231,7 @@ public class Client {
         pkgWrapper.verify_credential_signature(credential_to_show, a, r_1, r_2, r_3);
     }
 
-    public CipherTextTuple sendMessage(String receiver_public_key, IdentityBasedEncryption ibe, String message){
+    public CipherTextTuple sendMessage(AffinePoint receiver_public_key, IdentityBasedEncryption ibe, String message){
         return ibe.encrypt(message,receiver_public_key);
     }
 

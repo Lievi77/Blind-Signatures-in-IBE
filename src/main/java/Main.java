@@ -1,3 +1,4 @@
+import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.CipherTextTuple;
 import cryptid.ibe.domain.PrivateKey;
@@ -40,7 +41,7 @@ public class Main{
 
         System.out.println("Bob sends an encrypted message to Alice...");
         System.out.println("Bob uses Alice's point P(x,y) as the Public Key");
-        String alice_ec_public_key = Alice.get_x() + Alice.get_y();
+        AffinePoint alice_ec_public_key = Alice.get_user_point();
         String message = "Honors Project 2022";
         CipherTextTuple cipher = Bob.sendMessage(alice_ec_public_key,ibe, message);
 
@@ -57,7 +58,7 @@ public class Main{
         System.out.println("Showing blinded credential C_y");
         Alice.showBlindedCredentialsToPKG(pkgWrapper, blinded_cy);
 
-        String alice_blinded_ec_public_key = Alice.get_blinded_x() + Alice.get_blinded_y();
+       AffinePoint alice_blinded_ec_public_key = Alice.get_user_blinded_point();
         System.out.println(alice_blinded_ec_public_key);
         //after verification, pkg must compute blinded private key k'
         System.out.println("\nPKG issuing (blinded) private key...");
@@ -76,6 +77,5 @@ public class Main{
         System.out.println("Message is: ");
         ibe.decrypt(unblinded_pk, cipher).ifPresent(System.out::println);
 
-       // Utilities.get_generator(161);
     }
 }

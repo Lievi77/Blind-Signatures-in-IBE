@@ -25,15 +25,16 @@ final class BonehFranklinPrivateKeyGeneratorImpl extends PrivateKeyGenerator {
     }
 
     @Override
-    public PrivateKey extract(final String identity) {
+    public PrivateKey extract(final AffinePoint identity) {
         Objects.requireNonNull(identity);
 
         //Let Q_id = HashToPoint(E, p, q, id, hashfcn)
 
-        final AffinePoint qId = hashToPoint(publicParameters.getEllipticCurve(),
-                publicParameters.getEllipticCurve().getFieldOrder(), publicParameters.getQ(), identity, messageDigestFactory.obtainInstance());
+//        final AffinePoint qId = hashToPoint(publicParameters.getEllipticCurve(),
+//                publicParameters.getEllipticCurve().getFieldOrder(), publicParameters.getQ(), identity, messageDigestFactory.obtainInstance());
+
 
         //Let S_id = [s]Q_id
-        return new PrivateKey(qId.multiply(masterSecret, publicParameters.getEllipticCurve()));
+        return new PrivateKey(identity.multiply(masterSecret, publicParameters.getEllipticCurve()));
     }
 }

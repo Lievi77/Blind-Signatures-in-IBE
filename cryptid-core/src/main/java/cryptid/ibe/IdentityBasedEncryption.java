@@ -1,5 +1,6 @@
 package cryptid.ibe;
 
+import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.domain.CipherTextTuple;
 import cryptid.ibe.domain.PrivateKey;
 import cryptid.ibe.domain.PublicParameters;
@@ -31,7 +32,7 @@ public class IdentityBasedEncryption {
      * @param identity the identity of the receiver
      * @return the ciphertext
      */
-    public CipherTextTuple encrypt(final String message, final String identity) {
+    public CipherTextTuple encrypt(final String message, final AffinePoint identity) {
         return client.encrypt(message, identity);
     }
 
@@ -52,7 +53,7 @@ public class IdentityBasedEncryption {
      * @param identity the identity whose private key should be extracted
      * @return the private key corresponding to the identity
      */
-    public PrivateKey extract(final String identity) {
+    public PrivateKey extract(final AffinePoint identity) {
         return privateKeyGenerator.extract(identity);
     }
 

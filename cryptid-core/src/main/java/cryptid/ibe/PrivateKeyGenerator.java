@@ -28,7 +28,7 @@ public abstract class PrivateKeyGenerator {
      * @param identity the identity to get the private key of
      * @return the private key of the specified identity
      */
-    public abstract PrivateKey extract(String identity);
+    public abstract PrivateKey extract(AffinePoint identity);
 
     /**
      * Gets the public parameters.

@@ -26,12 +26,6 @@ public class PKGWrapper {
         return ibe;
     }
 
-    //Current empty method for decryption
-    public PrivateKey getPrivateKey(){
-
-        return ibe.extract("test");
-    }
-
     public BigInteger get_show_protocol_c(){
         //challenge
         this.c = BigInteger.valueOf(800815355);
