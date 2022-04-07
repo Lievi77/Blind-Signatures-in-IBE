@@ -1,29 +1,37 @@
-import org.bouncycastle.asn1.nist.NISTNamedCurves;
-import org.bouncycastle.asn1.x9.X9ECParameters;
+import cryptid.ellipticcurve.TypeOneEllipticCurve;
+import cryptid.ellipticcurve.point.affine.AffinePoint;
+import cryptid.ellipticcurve.point.affine.generator.AffinePointGenerationStrategy;
+import cryptid.ellipticcurve.point.affine.generator.GenerationStrategyFactory;
+import cryptid.ellipticcurve.point.affine.generator.Mod3GenerationStrategy;
+import cryptid.ibe.domain.PublicParameters;
 import org.bouncycastle.math.ec.ECPoint;
-import org.bouncycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
 public class CA {
+    private static BigInteger ZERO = BigInteger.ZERO;
+    private static BigInteger ONE = BigInteger.ONE;
+    private static BigInteger ELEVEN = BigInteger.valueOf(11);
+    private static BigInteger TWELVE = BigInteger.valueOf(12);
+
 
     private SystemParameters systemParams;
     private BigInteger w_zero; // random value used in issue protocol
-    private BigInteger masterSecret;
-    private X9ECParameters x9;
-    private ArrayList<ECPoint> userPoints;
+    private ArrayList<AffinePoint> userPoints;
 
-    private  ECPoint ec_generator;
+    private  AffinePoint ec_point_generator;
+
+    private TypeOneEllipticCurve ca_ec;
+
+    private PublicParameters publicParameters;
+
     private ArrayList<BigInteger> testing = new ArrayList<>();
 
-    private final BigInteger q = new BigInteger("2060482539417004714807271807532720159194878157261"); // q is 161 bits
-    private final BigInteger p = new BigInteger("126722927330356485972716360228361378886490200326758635063580789329619470494803880557558327132084315144776849176169714865071209572450289026191060457204039240766393131753949708301757283139290367502337143697243329250098665250159099169322160644987891564405304100997024323402318553668671843846560769150430780325889"); //p is 1024 bits
-    private final BigInteger g_0 = new BigInteger("77892431251886878118231985443373842394949753687066869134988804136021582778525930673668862598795510663833591351729154915902687105749976049404466724780891697681133157484106077172700399828563248948202504294761256952752894303164095385771858414065268087999377076432060776344348284748617607017689393017527892943747");
+    private final  BigInteger q ; // q is 161 bits
+    private  BigInteger p; //p is 1024 bits
+    private final BigInteger g_0;
 
     // Private key values for issuing protocol
     //Can be anything as long as they're within Z_q
@@ -31,13 +39,21 @@ public class CA {
     private final BigInteger y_2 = BigInteger.valueOf(1137);
     private final BigInteger x_0 = BigInteger.valueOf(80085);
 
-    public CA() {
-        // Create P-224 type Elliptic Curve along with master secret and Q value (temp)
-        x9 = NISTNamedCurves.getByName("P-224");
-        masterSecret = BigInteger.ONE;
-        ec_generator = this.x9.getG();
-        userPoints = new ArrayList<>();
 
+
+    public CA(PublicParameters publicParameters) {
+        //set up p,q,g_0
+        q = publicParameters.getEllipticCurve().getFieldOrder();
+        g_0 = get_generator();
+
+        this.ca_ec = publicParameters.getEllipticCurve();
+
+        this.publicParameters = publicParameters;
+
+        //ec_point_generator = gen_strategy.generate(100).get();
+        ec_point_generator = publicParameters.getPointP();
+
+        userPoints = new ArrayList<>();
         /*
          * Assertions to ensure pk and pb y_i's and x_0 are within Zq
          */
@@ -63,13 +79,13 @@ public class CA {
         BigInteger h_0 = g_0.modPow(x_0, p);
         //System.out.println("h_0: " + h_0);
 
-        this.systemParams = new SystemParameters(g_0, g_1, g_2, h_0, q, p);
+        this.systemParams = new SystemParameters(g_0, g_1, g_2, h_0, q, p, publicParameters.getEllipticCurve(), publicParameters.getQ() );
 
         return this.systemParams;
     }
 
     // Set user point via point passed
-    public void set_user_point(ECPoint userPoint) {
+    public void set_user_point(AffinePoint userPoint) {
         userPoints.add(userPoint);
     }
 
@@ -82,20 +98,21 @@ public class CA {
     // Secondary verify function used for if point is not available
     public boolean verify_user_point(String identity) {
         BigInteger input = Utilities.str_to_big_int(identity);
-        ECPoint toCompare = ec_generator.multiply(input);
+        AffinePoint toCompare = ec_point_generator.multiply(input, ca_ec);
 
         return this.userPoints.contains(toCompare);
     }
 
     // Public function used to generate a point on the EC for a given identity
-    public ECPoint generate_user_point(String identity){
+    public AffinePoint generate_user_point(String identity){
 
         // Convert identity to hexadecimal hash and use as BigInteger to generate point
         // on curve, call method to set point in array of points
         BigInteger input = Utilities.str_to_big_int(identity);
-        ECPoint point = this.ec_generator.multiply(input);
-        set_user_point(point);
-        return point;
+        //ECPoint point = this.ec_generator.multiply(input);
+        AffinePoint user_point = ec_point_generator.multiply(input, ca_ec);
+        set_user_point(user_point);
+        return user_point;
     }
 
     public BigInteger generate_a_zero() {
@@ -127,5 +144,38 @@ public class CA {
 
         // can also express a division as a multiplication
         return nominator.multiply(denominator).mod(q);
+    }
+
+    public TypeOneEllipticCurve get_ec(){
+        return this.ca_ec;
+    }
+
+    public BigInteger get_generator() {
+
+        BigInteger r;
+
+        do {
+            r  = new BigInteger( 1024 - q.bitLength(), Utilities.secureRandom);
+            p = q.multiply(r); // get 1024 bit p (1024 - number_of_bits)
+            p = p.add(BigInteger.ONE);
+        } while (!p.isProbablePrime(100) || p.bitLength() < 1024);
+
+        assert q.isProbablePrime(100) : "must be a prime";
+        assert q.mod(TWELVE).equals(ELEVEN) : "Must be congruent 11 modulo 12";
+        assert p.isProbablePrime(100) : "must be prime";
+        assert p.subtract(ONE).mod(q).equals(ZERO): "p-1 must be divisible by q"; // ensures p-1 is divisible by p
+        assert p.bitLength() == 1024;
+
+        BigInteger h = new BigInteger(160, new SecureRandom());
+
+        assert h.compareTo(BigInteger.ONE) > 0 : "H has to be greater than 1";
+
+        BigInteger exp = p.subtract(BigInteger.ONE).divide(q);
+
+        BigInteger g = h.modPow(exp, p);
+
+        assert g.compareTo(BigInteger.ONE) > 0 : "G CANNOT BE ONE";
+
+        return g;
     }
 }

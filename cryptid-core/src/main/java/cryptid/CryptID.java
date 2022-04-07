@@ -53,7 +53,7 @@ public final class CryptID {
             final PrivateKeyGenerator privateKeyGenerator =
                     componentFactory.obtainPrivateKeyGenerator(setup.getPublicParameters(), setup.getMasterSecret());
 
-            return new IdentityBasedEncryption(client, privateKeyGenerator);
+            return new IdentityBasedEncryption(client, privateKeyGenerator, setup.getPublicParameters());
         } catch (final Exception e) {
             throw new SetupException("Could not setup Boneh-Franklin IBE.", e);
         }

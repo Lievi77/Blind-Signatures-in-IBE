@@ -12,6 +12,8 @@ public class Utilities {
 
     public static SystemParameters systemParameters;
 
+
+
     public static BigInteger str_to_big_int(String s){
         //Every single SHA-1 output will be in Z_q (q is 161 bits)
 

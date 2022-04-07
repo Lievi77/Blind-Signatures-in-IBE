@@ -1,5 +1,6 @@
 package cryptid.ibe;
 
+import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.domain.CipherTextTuple;
 import cryptid.ibe.domain.PrivateKey;
 import cryptid.ibe.domain.PublicParameters;
@@ -26,7 +27,7 @@ public abstract class IbeClient {
      * @param identity the identity to encrypt with
      * @return the ciphertext result of the encryption
      */
-    public abstract CipherTextTuple encrypt(String message, String identity);
+    public abstract CipherTextTuple encrypt(String message, AffinePoint identity);
 
     /**
      * Decrypts the specified ciphertext with the specified private key. If the decryption if successful,

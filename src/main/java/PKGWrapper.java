@@ -1,7 +1,8 @@
+
+
 import cryptid.CryptID;
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.PrivateKey;
-
 import cryptid.ibe.domain.SecurityLevel;
 import cryptid.ibe.exception.SetupException;
 
@@ -9,26 +10,20 @@ import java.math.BigInteger;
 
 
 //Public wrapper class
-public class PKG{
+public class PKGWrapper {
 
     //IBE instance used for application
-    private IdentityBasedEncryption ibe;
+    private final IdentityBasedEncryption ibe;
     private BigInteger c;
 
     //Public constructor
-    public PKG() throws SetupException{
+    public PKGWrapper() throws  SetupException {
         ibe = CryptID.setupBonehFranklin(SecurityLevel.LOWEST);
     }
 
     //Return IBE instance
     public IdentityBasedEncryption getInstance(){
         return ibe;
-    }
-
-    //Current empty method for decryption
-    public PrivateKey getPrivateKey(){
-
-        return ibe.extract("test");
     }
 
     public BigInteger get_show_protocol_c(){

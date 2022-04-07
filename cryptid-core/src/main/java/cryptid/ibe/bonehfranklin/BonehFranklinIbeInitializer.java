@@ -56,7 +56,7 @@ public class BonehFranklinIbeInitializer implements IbeInitializer {
         do {
             r = randomBigInteger(BigInteger.ZERO, rBase, secureRandom);
             p = BigInteger.valueOf(12L).multiply(r).multiply(q).subtract(BigInteger.ONE);
-        } while (!p.isProbablePrime(PRIME_CERTAINTY));
+        } while (!p.isProbablePrime(PRIME_CERTAINTY) || p.bitLength() < securityLevel.getpLength());
 
         TypeOneEllipticCurve ec = TypeOneEllipticCurve.ofOrder(p);
 

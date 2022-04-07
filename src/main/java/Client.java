@@ -1,14 +1,9 @@
-import cryptid.ellipticcurve.EllipticCurve;
 import cryptid.ellipticcurve.TypeOneEllipticCurve;
 import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.IdentityBasedEncryption;
-import cryptid.ibe.PrivateKeyGenerator;
 import cryptid.ibe.domain.CipherTextTuple;
 import cryptid.ibe.domain.PrivateKey;
-import cryptid.ibe.domain.PublicParameters;
-import org.bouncycastle.math.ec.ECPoint;
 
-import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.Scanner;
 
@@ -18,38 +13,41 @@ public class Client {
     private final String email;
     private Credential credential;
     private SystemParameters systemParameters;
-    private ECPoint user_ec_point;
-    private ECPoint P_prime;
+    private AffinePoint user_ec_point;
+    private AffinePoint user_ec_point_prime;
     private BigInteger r; // integer used to blind the EC point
+    private BigInteger r_inv;
     private BigInteger r_x; // used to blind and unblind C_x
     private BigInteger r_y; // used to blind and unblind C_y
     private BigInteger alpha; //blinding factor
-
-    // Blinded credentials
-    private BigInteger blinded_cx;
-    private BigInteger blinded_cy;
-
-
 
     public Client(String email) {
         this.email = email;
         this.inputScanner = new Scanner(System.in);
     }
 
+    public AffinePoint get_user_point(){
+        return user_ec_point;
+    }
+
+    public AffinePoint get_user_blinded_point(){
+        return user_ec_point_prime;
+    }
+
     public String get_x(){
-        return user_ec_point.getXCoord().toString();
+        return user_ec_point.getX().toString();
     }
 
     public String get_y(){
-        return user_ec_point.getYCoord().toString();
+        return user_ec_point.getY().toString();
     }
 
     public String get_blinded_x(){
-        return P_prime.getXCoord().toString();
+        return user_ec_point_prime.getX().toString();
     }
 
     public String get_blinded_y(){
-        return P_prime.getYCoord().toString();
+        return user_ec_point_prime.getY().toString();
     }
 
     public String getEmail() {
@@ -78,7 +76,6 @@ public class Client {
         // first, alice needs to choose 3 different numbers
         BigInteger alpha_one, alpha_two, alpha_three;
 
-        // hardcoded "random"
         // Example of programming with assertion
         alpha_one = new BigInteger(q.bitLength()-1, Utilities.secureRandom); // blinding factor
         this.alpha= alpha_one;
@@ -97,14 +94,25 @@ public class Client {
         // create credential
         // here in the credential, we put as x_1, x_2 the coordinates
         // of the EC
-        //System.out.println("-->Requesting EC point for " + email);
-        ECPoint assigned_point = admin.generate_user_point(email);
-        this.user_ec_point = assigned_point;
-        r = BigInteger.valueOf(90); //for now r is fixed for testing
-        P_prime = user_ec_point.multiply(r);
+        System.out.println("-->Requesting EC point for " + email);
+        AffinePoint assigned_point = admin.generate_user_point(email);
 
-        String EC_x = assigned_point.getXCoord().toString();
-        String EC_y = assigned_point.getYCoord().toString();
+        String EC_x = assigned_point.getX().toString();
+        String EC_y = assigned_point.getY().toString();
+
+        System.out.println("-->Assigned EC point :(" +EC_x +", " + EC_y+")" );
+
+        this.user_ec_point = assigned_point;
+
+
+        // r has to be in Z_{q_e}
+        r = new BigInteger(systemParameters.get_q_e().bitLength()-1, Utilities.secureRandom); //for now r is fixed for testing
+        r_inv = r.modInverse(systemParameters.get_q_e());
+        TypeOneEllipticCurve EC = systemParameters.get_ec();
+
+        user_ec_point_prime = user_ec_point.multiply(r, EC);
+
+       assert user_ec_point_prime.multiply(r_inv,EC).equals(user_ec_point) : "Inversing must be true";
 
         credential = new Credential(systemParameters, EC_x, EC_y, alpha_one);
         // to get h,as in the protocol , call credential.get_blinded_public_key
@@ -181,32 +189,9 @@ public class Client {
         return hex_hashed_as_big_int;
     }
 
-    public CipherTextTuple encryptMessage(IdentityBasedEncryption ibe) {
-        String plaintext = getPlainText();
-        String publicKey = getPublicKey();
-
-        CipherTextTuple cipherText = ibe.encrypt(plaintext, publicKey);
-
-        return cipherText;
-    }
-
-    public String getPlainText() {
-        System.out.println("Input plaintext to be encrypted below:");
-        String plaintext = inputScanner.nextLine();
-
-        return plaintext;
-    }
-
-    public String getPublicKey() {
-        System.out.println("Input the user's public key for encryption below: ");
-        String publicKey = inputScanner.nextLine();
-
-        return publicKey;
-    }
-
     // Show protocol
     // i.e, proof of knowledge
-    public void showBlindedCredentialsToPKG(PKG pkg, Credential credential_to_show) {
+    public void showBlindedCredentialsToPKG(PKGWrapper pkgWrapper, Credential credential_to_show) {
 
         // get everything from system parameters
         BigInteger q = this.systemParameters.get_q();
@@ -236,19 +221,17 @@ public class Client {
 
         BigInteger a = g_1_pow_w_1.multiply(g_2_pow_w_2).multiply(h_0_pow_w_3).mod(p);
 
-        BigInteger c = pkg.get_show_protocol_c();
+        BigInteger c = pkgWrapper.get_show_protocol_c();
 
         // create r's
         BigInteger r_1 = c.multiply(x_1).add(w_1).mod(q);
         BigInteger r_2 = c.multiply(x_2).add(w_2).mod(q);
         BigInteger r_3 = c.multiply(alpha).add(w_3).mod(q);
 
-        pkg.verify_credential_signature(credential_to_show, a, r_1, r_2, r_3);
+        pkgWrapper.verify_credential_signature(credential_to_show, a, r_1, r_2, r_3);
     }
 
-    public CipherTextTuple sendMessage(String receiver_public_key, IdentityBasedEncryption ibe){
-        String message = "Makima is the control devil";
-
+    public CipherTextTuple sendMessage(AffinePoint receiver_public_key, IdentityBasedEncryption ibe, String message){
         return ibe.encrypt(message,receiver_public_key);
     }
 
@@ -257,8 +240,9 @@ public class Client {
         // random r_x in Z_q
         BigInteger q = systemParameters.get_q();
         
-        BigInteger x = user_ec_point.getXCoord().toBigInteger().mod(q);
-        BigInteger x_prime = P_prime.getXCoord().toBigInteger().mod(q);
+        BigInteger x = user_ec_point.getX();
+        assert x.compareTo(q) < 0 : "x must be in Z_q";
+        BigInteger x_prime = user_ec_point_prime.getX();
         
         //mult inverse of x
         BigInteger x_inv = x.modInverse(q);
@@ -272,27 +256,26 @@ public class Client {
         BigInteger g_2 = systemParameters.get_g_2();
         BigInteger h_0 = systemParameters.get_h_0();
         BigInteger p = systemParameters.get_p();
-        BigInteger y = user_ec_point.getYCoord().toBigInteger();
+        BigInteger y = user_ec_point.getY();
 
         BigInteger g_1_pow_x_prime = g_1.modPow(x_prime,p);
         BigInteger g_2_pow_r_x_y = g_2.modPow(r_x.multiply(y), p );
         BigInteger h_0_pow_r_x_alpha = h_0.modPow(r_x.multiply(alpha),p);
 
-        this.blinded_cx = g_1_pow_x_prime.multiply(g_2_pow_r_x_y).multiply(h_0_pow_r_x_alpha).mod(q);
+            BigInteger blinded_cx = g_1_pow_x_prime.multiply(g_2_pow_r_x_y).multiply(h_0_pow_r_x_alpha).mod(q);
 
         return new Credential(systemParameters,x_prime.toString(),y.toString(), alpha, r_x);
     }
 
     //must be run after requestCredential
     public Credential blindCredentialY(){
-        //Double check with adams
         // random r_x in Z_q
         BigInteger q = systemParameters.get_q();
         BigInteger p = systemParameters.get_p();
 
-        BigInteger x = user_ec_point.getXCoord().toBigInteger();
-        BigInteger y = user_ec_point.getYCoord().toBigInteger().mod(q);
-        BigInteger y_prime = P_prime.getYCoord().toBigInteger().mod(q);
+        BigInteger x = user_ec_point.getX();
+        BigInteger y = user_ec_point.getY();
+        BigInteger y_prime = user_ec_point_prime.getY();
 
         //mult inverse of x
         BigInteger y_inv = y.modInverse(q);
@@ -309,24 +292,20 @@ public class Client {
         BigInteger g2_pow_y_prime = g_2.modPow(y_prime,p);
         BigInteger h0_pow_r_y = h_0.modPow(r_y.multiply(alpha),p);
 
-        this.blinded_cy = (g1_pow_r_y_x.multiply(g2_pow_y_prime).multiply(h0_pow_r_y)).mod(q);
+        BigInteger blinded_cy = (g1_pow_r_y_x.multiply(g2_pow_y_prime).multiply(h0_pow_r_y)).mod(q);
 
         return new Credential(systemParameters,x.toString(),y_prime.toString(), alpha, r_y);
     }
 
-    public PrivateKey unblind_private_key(PrivateKey pk, CA ca){
-        BigInteger q = systemParameters.get_q();
+    public PrivateKey unblind_private_key(PrivateKey pk){
 
-        BigInteger r_inv = r.modInverse(q);
+        TypeOneEllipticCurve EC = systemParameters.get_ec();
 
-       AffinePoint pk_point = pk.getData();
+        AffinePoint k_prime= pk.getData();
 
-       TypeOneEllipticCurve ec = TypeOneEllipticCurve.ofOrder(BigInteger.valueOf(11));
-       AffinePoint test = new AffinePoint(user_ec_point.getXCoord().toBigInteger(), user_ec_point.getYCoord().toBigInteger() );
+        AffinePoint k = k_prime.multiply(r_inv,EC);
 
-
-
-        return new PrivateKey(test);
+        return new PrivateKey(k);
     }
 
 }

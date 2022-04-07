@@ -1,3 +1,4 @@
+import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.CipherTextTuple;
 import cryptid.ibe.domain.PrivateKey;
@@ -17,12 +18,12 @@ public class Main{
         //Create PKG/IBE wrapper class for issuing private keys
         System.out.println("Creating PKG...");
 
-        PKG pkg = new PKG();
+        PKGWrapper pkgWrapper = new PKGWrapper();
         //Get instance of IBE in wrapper class for use in encrypting
-        IdentityBasedEncryption ibe = pkg.getInstance();
+        IdentityBasedEncryption ibe = pkgWrapper.getInstance();
 
         System.out.println("Creating CA...");
-        CA certificateAuthority = new CA();
+        CA certificateAuthority = new CA(ibe.getPublicParameters());
         Utilities.setSystemParameters(certificateAuthority);
 
         //Create Bob and Alice and receive their credentials
@@ -40,8 +41,9 @@ public class Main{
 
         System.out.println("Bob sends an encrypted message to Alice...");
         System.out.println("Bob uses Alice's point P(x,y) as the Public Key");
-        String alice_ec_public_key = Alice.get_x() + Alice.get_y();
-        CipherTextTuple cipher = Bob.sendMessage(alice_ec_public_key,ibe);
+        AffinePoint alice_ec_public_key = Alice.get_user_point();
+        String message = "Honors Project 2022";
+        CipherTextTuple cipher = Bob.sendMessage(alice_ec_public_key,ibe, message);
 
         //Get blinded credentials
         System.out.println("Blinding Alice's Credentials...\n");
@@ -52,20 +54,27 @@ public class Main{
 
         //show and verify credentials
         System.out.println("Showing blinded credential C_x");
-        Alice.showBlindedCredentialsToPKG(pkg, blinded_cx );
+        Alice.showBlindedCredentialsToPKG(pkgWrapper, blinded_cx );
         System.out.println("Showing blinded credential C_y");
-        Alice.showBlindedCredentialsToPKG(pkg, blinded_cy);
-        String alice_blinded_ec_public_key = Alice.get_blinded_x() + Alice.get_blinded_y();
+        Alice.showBlindedCredentialsToPKG(pkgWrapper, blinded_cy);
+
+       AffinePoint alice_blinded_ec_public_key = Alice.get_user_blinded_point();
+        System.out.println(alice_blinded_ec_public_key);
         //after verification, pkg must compute blinded private key k'
-        System.out.println("PKG issuing (blinded) private key...");
-        //System.out.println(blinded_xy_coord);
+        System.out.println("\nPKG issuing (blinded) private key...");
         PrivateKey blinded_pk = ibe.extract(alice_blinded_ec_public_key);
 
 
         System.out.println("Alice unblinds private key...");
-        PrivateKey unblinded_pk = Alice.unblind_private_key(blinded_pk, certificateAuthority);
+        PrivateKey unblinded_pk = Alice.unblind_private_key(blinded_pk);
 
-        System.out.println("Alice now decrypts the message...");
+       PrivateKey pk = ibe.extract(alice_ec_public_key);
+        System.out.println("Actual Key: " + pk.getData());
+        System.out.println("Unblinded Key: " + unblinded_pk.getData());
+        assert pk.equals(unblinded_pk ): "Unblinded pk should equal pk";
+
+        System.out.println("Alice now decrypts the message...\n");
+        System.out.println("Message is: ");
         ibe.decrypt(unblinded_pk, cipher).ifPresent(System.out::println);
 
     }
