@@ -58,12 +58,15 @@ public class BonehFranklinIbeInitializer implements IbeInitializer {
             p = BigInteger.valueOf(12L).multiply(r).multiply(q).subtract(BigInteger.ONE);
         } while (!p.isProbablePrime(PRIME_CERTAINTY) || p.bitLength() < securityLevel.getpLength());
 
+
+
+        r = new BigInteger("283658353342583730");
+        q = new BigInteger("1267650600228228275596796362751");
+        p = new BigInteger("4314956182493725532720911707357092197256047694759");
+
         System.out.println("r_e: " + r);
         System.out.println("q_e: " + q);
         System.out.println("p_e: " + p);
-
-        //q = new BigInteger("1267650600228228275596796362751");
-        //p = new BigInteger("4181935184499789240650980683903502670444206427687");
 
         TypeOneEllipticCurve ec = TypeOneEllipticCurve.ofOrder(p);
 
