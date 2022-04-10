@@ -44,11 +44,6 @@ public class CA {
     public CA(PublicParameters publicParameters) {
         //set up p,q,g_0
         q = publicParameters.getEllipticCurve().getFieldOrder();
-        System.out.println("q_d: " + q);
-        System.out.println("p_d: " + p);
-        System.out.println("g_0: " + g_0);
-
-//        g_0 = new BigInteger("04845890110246618178493925378462414643652342910936470374454500662245867688158539089123685697837496218139386613161692967490300273013207435756630031968403070387874347963552260441872781361827358975253749736728834312569177475120552852155376478319243119847793459603732935418210214542753782094021201890798155375083");
 
         this.ca_ec = publicParameters.getEllipticCurve();
 

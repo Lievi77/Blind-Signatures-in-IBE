@@ -64,10 +64,6 @@ public class BonehFranklinIbeInitializer implements IbeInitializer {
         q = new BigInteger("1267650600228228275596796362751");
         p = new BigInteger("4314956182493725532720911707357092197256047694759");
 
-        System.out.println("r_e: " + r);
-        System.out.println("q_e: " + q);
-        System.out.println("p_e: " + p);
-
         TypeOneEllipticCurve ec = TypeOneEllipticCurve.ofOrder(p);
 
         final AffinePointGenerationStrategy pointGenerationStrategy = generationStrategyFactory.newInstance(ec);
