@@ -2,3 +2,4 @@
 target/
 *.code-workspace
 out/
+.vscode/
