@@ -29,17 +29,9 @@ To install this program and its dependencies. Run the following command in this 
 
 Then navigate to `target/classes/` and run
 
-> java Testing
+> java Main
 
-to run the test program.
-
-## **TODO**
-
-- [x] Create High-Level Design diagram
-- [ ] Define Key and Certificate classes
-- [ ] Create UML diagrams for each class
-- [ ] Begin implementation of CA and communication with user class
-- [ ] Edit PKGWrapper source class to allow for proof of identity via digital credentials
+to run the Main program.
 
 
 ## High-Level Architecture Diagram
@@ -49,7 +41,7 @@ The following diagram represents a High-Level overview of the goal of this proje
 
 ## System-Wide Parameters
 
-- q (prime number) = 123766290236648576999305319065597697947 (128 bit)
+- q - prime number used in the Digital Credential Issuance is of 161 bits
 - Generator for cyclic group of prime order q can be made from a coprime/ number p that is less than q
   - A group of prime order is cyclic.
   - By the euler totient function, we have q-1 choices of generators.
@@ -57,20 +49,9 @@ The following diagram represents a High-Level overview of the goal of this proje
 - SHA256 as Hash Function.
 - All numbers will be handled in hexadecimal, most likely including predetermined prime numbers used as well
 
-### Next Steps
 
-1 thing at the time :)
 
-- [x] Construct Alice and CA classes first!
-
-### Issue Protocol Test
-
-For the sake of testing, the initial iteration of the issue protocol will have the following parameters:
-
-- q = 11
-- g_0 = 3
-- y_1 = 7 - used to generate g_1 
-- x_0 = 8 - used to generate h_0
+### Protocol Test
 
 The issue protocol will be in accordance to Brand's paper.
 
@@ -78,4 +59,4 @@ The issue protocol will be in accordance to Brand's paper.
 
 ### Blinding the Credential
 
-> Alice multiplies P by a random integer r to give a new point P' = rP = (x', y').  Alice can find r_x and r_y such that x' = (r_x)x.  Similarly, she can find r_y such that y' = (r_y)y.  Therefore, Alice can take her credential C = g1^x . g2^y . h0^alpha and blind it to C_x = C^(r_x) = g1^x' . g2^(r_x)y . h0^(r_x)alpha.  Similarly, she can blind C to C_y = C^(r_y) = g1^(r_y)x . g2^y' . h0^(r_y)alpha.  (As I mentioned, she needs to create both these blinded credentials because there is not a single value that she can raise C to that will correctly modify both x and y.)
+> Alice multiplies P (EC Point Representation of the public key 'alice@email.com') by a random integer r to give a new point P' = rP = (x', y').  Alice can find r_x and r_y such that x' = (r_x)x.  Similarly, she can find r_y such that y' = (r_y)y.  Therefore, Alice can take her credential C = g1^x . g2^y . h0^alpha and blind it to C_x = C^(r_x) = g1^x' . g2^(r_x)y . h0^(r_x)alpha.  Similarly, she can blind C to C_y = C^(r_y) = g1^(r_y)x . g2^y' . h0^(r_y)alpha.  (As I mentioned, she needs to create both these blinded credentials because there is not a single value that she can raise C to that will correctly modify both x and y.)
