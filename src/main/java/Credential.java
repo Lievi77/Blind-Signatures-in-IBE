@@ -4,12 +4,7 @@ public class Credential {
 
     private final BigInteger alpha_one; // blinding factor
 
-    /**
-     * The ID (or count) of the current credential
-     */
-    private static int id = 0;
-
-    // regular public key is not pow alpha_one
+    // regular public key is not power alpha_one
     private BigInteger unblinded_public_key;
 
     private BigInteger blinded_public_key;
@@ -30,6 +25,7 @@ public class Credential {
 
     // Credential Signature issued by CA
     private BigInteger c_prime_zero = null; // non-null only after issue protocol is run
+
     private BigInteger r_prime_zero = null;
 
     /**
@@ -93,8 +89,6 @@ public class Credential {
      * public keys.
      */
     private void generate_public_keys() {
-        // Generates both normal public and blinded public key
-
         BigInteger g_1 = system_parameters.get_g_1();
         BigInteger g_2 = system_parameters.get_g_2();
         BigInteger h_0 = system_parameters.get_h_0();
@@ -105,19 +99,13 @@ public class Credential {
         BigInteger h_0_pow_alpha = h_0.modPow(alpha_one, p);
         BigInteger base = g_one_pow_x_1.multiply(g_two_pow_x_2).mod(p);
 
-        // unblinded public key
         this.unblinded_public_key = base.multiply(h_0).mod(p);
-        // System.out.println("--> Unblinded public key, credential: " +
-        // unblinded_public_key);
 
-        // blind public key
         this.blinded_public_key = unblinded_public_key.modPow(alpha_one, p);
-        // System.out.println("--> Blinded public key, credential: " +
-        // blinded_public_key);
 
         this.show_protocol_brands_public_key = g_one_pow_x_1.multiply(g_two_pow_x_2).multiply(h_0_pow_alpha).mod(p);
 
-        // important!!
+        // important!!, public key cannot be equal to 1
         assert unblinded_public_key.compareTo(BigInteger.ONE) != 0;
         assert blinded_public_key.compareTo(BigInteger.ONE) != 0;
 
@@ -147,15 +135,20 @@ public class Credential {
         return show_protocol_brands_public_key;
     }
 
-    public int getId() {
-        return id;
-    }
-
+    /**
+     * Sets this credential's digital signature according to Brand's Issue Protocol.
+     * 
+     * @param c_prime_zero first signature element
+     * @param r_prime_zero second siganture element
+     */
     public void setSignature(BigInteger c_prime_zero, BigInteger r_prime_zero) {
         this.c_prime_zero = c_prime_zero;
         this.r_prime_zero = r_prime_zero;
     }
 
+    /**
+     * Prints this digital credentail's signature
+     */
     public void printSignature() {
         System.out.println("c'0: " + c_prime_zero);
         System.out.println("r'0: " + r_prime_zero);
