@@ -3,13 +3,9 @@ import cryptid.ellipticcurve.point.affine.AffinePoint;
 import cryptid.ibe.IdentityBasedEncryption;
 import cryptid.ibe.domain.CipherTextTuple;
 import cryptid.ibe.domain.PrivateKey;
-
 import java.math.BigInteger;
-import java.util.Scanner;
 
 public class Client {
-
-    public Scanner inputScanner;
     private final String email;
     private Credential credential;
     private SystemParameters systemParameters;
@@ -21,9 +17,12 @@ public class Client {
     private BigInteger r_y; // used to blind and unblind C_y
     private BigInteger alpha; //blinding factor
 
+    /**
+     * Construct a new client with an email.
+     *
+     * */
     public Client(String email) {
         this.email = email;
-        this.inputScanner = new Scanner(System.in);
     }
 
     public AffinePoint get_user_point(){
@@ -63,20 +62,21 @@ public class Client {
         return credential;
     }
 
-    // this method sets a new credential for the client
+    /**
+     *  Request a Brand's digital credential from a particular CA.
+     *
+     * @param admin the CA receiving the request.
+     */
     public void requestCredential(CA admin) {
 
         this.systemParameters = admin.get_system_parameters();
 
         BigInteger q = systemParameters.get_q();
 
-        // following the diagram
         BigInteger a_zero = admin.generate_a_zero();
 
-        // first, alice needs to choose 3 different numbers
         BigInteger alpha_one, alpha_two, alpha_three;
 
-        // Example of programming with assertion
         alpha_one = new BigInteger(q.bitLength()-1, Utilities.secureRandom); // blinding factor
         this.alpha= alpha_one;
 
@@ -104,7 +104,6 @@ public class Client {
 
         this.user_ec_point = assigned_point;
 
-
         // r has to be in Z_{q_e}
         r = new BigInteger(systemParameters.get_q_e().bitLength()-1, Utilities.secureRandom); //for now r is fixed for testing
         r_inv = r.modInverse(systemParameters.get_q_e());
@@ -125,13 +124,8 @@ public class Client {
 
         assert c_zero.compareTo(q) < 0 : "Value needs to be less than q";
 
-        //System.out.println("c_prime_zero: " + c_prime_zero);
-        //System.out.println("c_zero: " + c_zero);
-
         // now, send c_zero to CA
         BigInteger r_zero = admin.generate_r_zero(c_zero, credential.get_x1_big_int(), credential.get_x2_big_int());
-
-       // System.out.println("r_zero: " + r_zero);
 
         boolean isValid = this.verify_signature(a_zero, r_zero, c_zero);
 
@@ -231,6 +225,13 @@ public class Client {
         pkgWrapper.verify_credential_signature(credential_to_show, a, r_1, r_2, r_3);
     }
 
+    /**
+     * Encrypt using receiver_public_key and ibe scheme a message.
+     *
+     * @param receiver_public_key the receiver's public key as an elliptic curve point.
+     * @param ibe the ibe scheme to use.
+     * @param message the message to encrypt.
+     */
     public CipherTextTuple sendMessage(AffinePoint receiver_public_key, IdentityBasedEncryption ibe, String message){
         return ibe.encrypt(message,receiver_public_key);
     }
