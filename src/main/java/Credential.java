@@ -51,8 +51,6 @@ public class Credential {
         this.alpha_one = alpha_one.multiply(blinding);
 
         this.generate_public_keys();
-
-        id++;
     }
 
     /**
@@ -81,7 +79,7 @@ public class Credential {
 
         this.generate_public_keys();
 
-        id++;
+
     }
 
     /**

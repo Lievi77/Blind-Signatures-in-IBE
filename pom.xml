@@ -5,7 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <build>
-    <sourceDirectory>src/main/java crytid-core/src/main/java/cryptidid</sourceDirectory>
+    <sourceDirectory>src/main/java </sourceDirectory>
+
     </build>
 
     <groupId>org.hproject</groupId>
